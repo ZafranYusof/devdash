@@ -1,53 +1,79 @@
 # DevDash
 
-A developer dashboard for Windows. Local project status, deploy radar, uptime monitoring, database health, automations, and first-deploy flows for Vercel and Render — one window, no tab-hopping.
+A complete developer dashboard for Windows. Manage projects, deploy to Vercel and Render, monitor uptime, track performance, run pipelines, collaborate with your team — all from one window.
 
 ![DevDash](build/icon.png)
 
 ## Highlights
 
-- **Smart onboarding**: pick a parent folder, DevDash scans every repo, detects framework, matches to existing Vercel/Render deployments, imports what you select.
-- **First-deploy flow**: create new Vercel projects and Render services from inside the app. Env vars auto-import from your local `.env`.
-- **One-click redeploy**: per-project or bulk across every configured deployment.
-- **Cron automations**: schedule auto-pull or auto-deploy jobs per project with preset intervals (30m, hourly, daily, weekly).
-- **Database health**: ping MongoDB and Postgres connections. Auto-detect URLs from env files.
-- **Render metrics & Vercel analytics**: CPU, memory, visitor, pageview sparklines when available.
-- **Ollama chat**: streaming local LLM chat with per-project context (markdown, syntax highlighting, code block copy).
+- **27 tabs** covering every aspect of your dev workflow
+- **Smart onboarding**: scan a parent folder, auto-detect frameworks, match existing deployments, import with one click
+- **First-deploy flow**: create new Vercel projects and Render services from inside the app
+- **One-click redeploy**: per-project or bulk across all deployments
+- **CI/CD Pipelines**: visual pipeline builder with step types and execution simulation
+- **AI Assistant**: project-aware chat with deploy log analysis and commit message generation
+- **Team collaboration**: real-time sync via Supabase, activity feed, roles
+- **Performance monitoring**: Lighthouse-style scores, Core Web Vitals, bundle size tracking
+- **Incident management**: status flow, timeline, post-mortem, MTTR stats
+- **Plugin system**: extensible with hooks (onDeploy, onCommit, onError)
 
-## Features by tab
+## Features by Tab
 
-### Projects
-- Git status per card: branch, ahead/behind, dirty counts, last commit, dev-server port
-- Auto-detect framework and matching deploy on add: Vite, Next.js, Expo, React Native, Electron, Flutter, FastAPI, Node
-- **Quick actions** per card: open folder, VS Code, GitHub, live URL, run dev, git pull, quick commit (stage + commit + push), diff viewer, PR list, redeploy, **first deploy**, release wizard
-- **Smart import** button: bulk-scan any parent folder for git repos and import with checkbox selection
-- Tag support with multi-select filter bar
+### Core
+| Tab | What it does |
+| --- | --- |
+| **Dashboard** | KPI cards, activity feed, deploy status breakdown, quick actions |
+| **Projects** | Git status, framework detection, quick actions, tags, multi-select bulk operations |
+| **Deploys** | Live deploy status from Vercel/Render, auto-poll, bulk redeploy |
+| **Uptime** | HTTP checks, latency history, uptime %, status notifications |
 
-### Deploys
-- Recent deployments from every Vercel/Render project, with status badges (Ready / Building / Error / Queued / Canceled)
-- Auto-polls every 5 minutes (1-120 min configurable)
-- Toast + OS notification on status transitions
-- **Redeploy button per row** and **Redeploy all** for bulk-triggering across providers
-- Result summary toast with per-project error breakdown
+### Monitoring
+| Tab | What it does |
+| --- | --- |
+| **Performance** | Lighthouse scores, Core Web Vitals, bundle size trends, alert thresholds |
+| **Incidents** | Create/track incidents, status timeline, post-mortem, status page generator |
+| **Analytics** | Git heatmap, deploy frequency, project health scores, cost estimation |
+| **Metrics** | Render CPU/memory, Vercel visitor/pageview sparklines |
+| **DB Health** | Ping MongoDB and Postgres connections, auto-detect from env files |
+| **Env Manager** | Centralized env vars, compare local vs cloud, sync, secret vault |
+| **Time** | Time tracking per project |
+| **Deps** | Dependency audit, outdated detection, bulk update |
+| **Ports** | Dev server port monitoring |
 
-### Uptime
-- HTTP checks against each project's `liveUrl` on a scheduled interval (default 5 min)
-- Latency history, uptime % over 24h, latest status code
-- Toast notification on `ok → down` transitions
+### Build & Dev
+| Tab | What it does |
+| --- | --- |
+| **Terminal** | Integrated terminal with command history, tab completion, multi-session |
+| **Pipelines** | Visual CI/CD pipeline builder, step types, templates, run history |
+| **AI Assistant** | Project-aware AI chat, deploy log analyzer, commit message generator |
+| **Build Code** | Scaffold projects from templates with AI |
+| **Zero to Live** | First-deploy wizard for new projects |
+| **AI Code Gen** | AI-powered code generation |
+| **Templates** | Template editor, testing, analytics |
+| **Snippets** | Code snippet library |
 
+### Collaboration & Platform
+| Tab | What it does |
+| --- | --- |
+| **Team** | Supabase-powered real-time sync, members, activity feed, roles |
+| **Chat** | Ollama LLM chat with streaming, markdown, syntax highlighting |
+| **Mobile** | QR pairing, push notification settings, device management |
+| **Plugins** | Plugin registry, install/uninstall, hook system, event log |
+| **Automations** | Cron jobs for auto-pull, auto-deploy, scheduled tasks |
+| **Settings** | API tokens, theme, export/import config, update checker |
 
 ## Install
 
 ### Grab the installer
 
-1. Download `DevDash-Setup-<version>.exe` from the [Releases](https://github.com/Vexccz/devdash/releases) page.
+1. Download `DevDash-Setup-1.0.0.exe` from the [Releases](https://github.com/ZafranYusof/devdash/releases) page.
 2. Run the installer (NSIS, per-user, no admin needed).
 3. Launch DevDash from the Start menu or desktop shortcut.
 
 ### From source
 
 ```powershell
-git clone https://github.com/Vexccz/devdash.git
+git clone https://github.com/ZafranYusof/devdash.git
 Set-Location devdash
 npm install
 npm run dev       # Vite + Electron with hot reload
@@ -65,27 +91,45 @@ Both tokens are optional. DevDash runs without them; you just lose live deploy s
 1. Go to [vercel.com/account/tokens](https://vercel.com/account/tokens).
 2. Create a token scoped to your projects.
 3. Paste into Settings → Vercel API token (or in the onboarding wizard).
-4. For existing projects: DevDash auto-matches by GitHub remote; no manual ID needed.
 
 ### Render
 
 1. Go to [dashboard.render.com/u/settings#api-keys](https://dashboard.render.com/u/settings#api-keys).
 2. Create an API key.
 3. Paste into Settings → Render API token.
-4. For existing services: auto-matched by GitHub remote URL substring.
 
-## Storage locations
+### Supabase (for Team features)
 
-- Config (projects + settings + automations + db targets): `%APPDATA%\devdash\config.json`
-- Deploy + uptime + time + screenshots + automation runs cache: `%APPDATA%\devdash\cache.db`
-- Logs: `%APPDATA%\devdash\logs\`
-- Screenshots: `%APPDATA%\devdash\screenshots\<projectId>\`
+1. Create a project at [supabase.com](https://supabase.com).
+2. Copy the project URL and anon key.
+3. Paste into the Team tab setup screen.
+
+### Ollama (for AI features)
+
+1. Install [Ollama](https://ollama.com) and pull a model.
+2. DevDash auto-connects to `localhost:11434`.
+3. Or configure a custom endpoint in Settings.
+
+## Storage
+
+| Path | Contents |
+| --- | --- |
+| `%APPDATA%\devdash\config.json` | Projects, settings, automations, DB targets |
+| `%APPDATA%\devdash\cache.db` | Deploys, uptime, time, screenshots, automation runs |
+| `%APPDATA%\devdash\logs\` | Application logs |
+| `%APPDATA%\devdash\screenshots\` | Project screenshots |
 
 ## Keyboard shortcuts
 
-- `Ctrl+K`: command palette (fuzzy jump to any tab or project)
-- `?`: shortcuts overlay
-- `Esc`: close any modal
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+K` | Command palette |
+| `Ctrl+`` ` | Toggle activity log |
+| `N` | New item (context-dependent) |
+| `R` | Refresh current view |
+| `/` | Focus search |
+| `?` | Shortcuts overlay |
+| `Esc` | Close modal/panel |
 
 ## Tech stack
 
@@ -93,11 +137,12 @@ Both tokens are optional. DevDash runs without them; you just lose live deploy s
 - React 18 + Vite 5
 - Tailwind CSS 3
 - `simple-git` for git operations
-- `better-sqlite3` for deploy + uptime + chat history cache
+- `better-sqlite3` for local cache
+- `@supabase/supabase-js` for team collaboration
 - `axios` for Vercel, Render, MongoDB, Postgres, Ollama APIs
-- `node-cron` for scheduled jobs (uptime, automations, deps check)
+- `node-cron` for scheduled jobs
 - `mongodb` + `pg` for DB health pings
-- `marked` + `DOMPurify` + `highlight.js` for chat rendering
+- `marked` + `DOMPurify` + `highlight.js` for markdown/code rendering
 - `electron-builder` NSIS installer
 
 ## Scripts
@@ -114,60 +159,28 @@ Both tokens are optional. DevDash runs without them; you just lose live deploy s
 
 ```
 devdash/
-├─ electron/
-│  ├─ main.ts               # IPC, windows, tray, polling
-│  ├─ preload.ts            # contextBridge (window.devdash)
-│  ├─ config.ts             # AppConfig, persistence, seed
-│  ├─ git.ts + gitsafe.ts   # git wrappers with stderr suppression
-│  ├─ deploys.ts            # Vercel / Render API clients
-│  ├─ createdeploy.ts       # first-deploy flow (v0.10.0)
-│  ├─ inspect.ts            # folder scan + framework + deploy match (v0.9.0)
-│  ├─ automations.ts        # cron jobs (v0.8.0)
-│  ├─ dbhealth.ts           # MongoDB + Postgres ping (v0.8.0)
-│  ├─ rendermetrics.ts      # Render CPU/memory (v0.8.0)
-│  ├─ vercelanalytics.ts    # Vercel Web Analytics (v0.8.0)
-│  ├─ ollama.ts             # streaming chat client
-│  ├─ uptime.ts             # HTTP uptime checks
-│  ├─ scheduler.ts          # cron scheduler for all jobs
-│  ├─ cache.ts              # better-sqlite3 tables
+├─ electron/           # Main process (IPC, windows, APIs)
+│  ├─ main.ts
+│  ├─ preload.ts
+│  ├─ config.ts
+│  ├─ git.ts
+│  ├─ deploys.ts
+│  ├─ uptime.ts
+│  ├─ automations.ts
+│  ├─ dbhealth.ts
+│  ├─ ollama.ts
+│  ├─ scheduler.ts
+│  ├─ cache.ts
 │  └─ ...
-├─ src/
+├─ src/                # Renderer (React UI)
 │  ├─ App.tsx
-│  ├─ components/
-│  │  ├─ OnboardingWizard.tsx    (v0.9.1)
-│  │  ├─ NewDeploymentModal.tsx  (v0.10.0)
-│  │  ├─ SmartImportModal.tsx    (v0.9.0)
-│  │  ├─ AutomationsView.tsx     (v0.8.0)
-│  │  ├─ DbHealthView.tsx        (v0.8.0)
-│  │  ├─ MetricsView.tsx         (v0.8.0)
-│  │  ├─ ProjectsView.tsx + ProjectDetail.tsx
-│  │  ├─ DeploysView.tsx
-│  │  ├─ ChatView.tsx + MarkdownMessage.tsx
-│  │  ├─ UptimeView.tsx + TimeView.tsx + DepsView.tsx
-│  │  └─ SettingsView.tsx + CommandPalette.tsx + ShortcutsOverlay.tsx
+│  ├─ components/      # 40+ components
 │  ├─ types.ts
 │  └─ styles.css
-├─ scripts/make-icons.cjs
-└─ build/icon.png
+├─ templates/          # Project scaffold templates
+├─ scripts/
+└─ build/
 ```
-
-## Release history
-
-- **v0.10.0** — First-deploy flow: create new Vercel projects and Render services from DevDash
-- **v0.9.2** — Per-row + bulk redeploy in Deploys tab
-- **v0.9.1** — Onboarding wizard with auto-scan
-- **v0.9.0** — Auto-detect project metadata on Add; Smart import for bulk scanning
-- **v0.8.2** — Config persistence fix, monorepo run-dev, stale UA strings
-- **v0.8.1** — Monorepo `run dev`; DB auto-detect from env files
-- **v0.8.0** — Automations, DB Health, Render metrics, Vercel analytics, breadcrumbs
-- **v0.7.0** — Diff viewer, PR status per project
-- **v0.6.0** — Syntax highlighting, encrypted config backup
-- **v0.5.1** — Ollama Cloud support
-- **v0.5.0** — Markdown in chat, shortcuts overlay, light mode
-- **v0.4.0** — Ollama chat tab with streaming + history
-- **v0.3.0** — Tags, quick commit, redeploy button
-- **v0.2.0** — 13 features: logs, devservers, uptime, env, time, deps, release, heatmap, screenshots, command palette
-- **v0.1.0** — Projects dashboard + deploy radar
 
 ## License
 
