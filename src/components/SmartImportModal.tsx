@@ -75,18 +75,20 @@ export default function SmartImportModal({ open, onClose, onImported }: Props) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-lg border border-dash-line bg-dash-panel">
-        <header className="flex items-center justify-between border-b border-dash-line px-4 py-3">
+    <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="modal-content flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl border border-[#222] bg-[#111] shadow-2xl">
+        <header className="flex items-center justify-between border-b border-[#222] px-4 py-3">
           <div>
-            <h3 className="text-sm font-semibold">Smart import</h3>
+            <h3 className="text-sm font-semibold text-white">Smart import</h3>
             <p className="text-[11px] text-dash-mute">
               Pick a parent folder. DevDash scans each repo for git remote, framework, and matching
               Vercel/Render project.
             </p>
           </div>
-          <button onClick={onClose} className="text-dash-mute hover:text-dash-text">
-            ×
+          <button onClick={onClose} className="btn-icon">
+            <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+            </svg>
           </button>
         </header>
 

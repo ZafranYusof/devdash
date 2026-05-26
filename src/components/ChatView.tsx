@@ -289,8 +289,12 @@ export default function ChatView() {
             ))}
             {streaming && streamText && <MessageBubble role="assistant" content={streamText} streaming />}
             {streaming && !streamText && (
-              <div className="mb-3 text-xs text-dash-mute">
-                <span className="inline-block animate-pulse">●●●</span> thinking...
+              <div className="mb-3 flex justify-start">
+                <div className="rounded-lg border border-[#222] bg-[#111] px-4 py-3">
+                  <div className="streaming-dots text-dash-mute">
+                    <span>●</span><span>●</span><span>●</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -360,8 +364,8 @@ function MessageBubble({ role, content, streaming }: { role: string; content: st
   const isSystem = role === 'system';
   if (isSystem) {
     return (
-      <div className="mb-3 rounded border border-dash-line/50 bg-dash-bg/40 px-3 py-2 text-[11px] italic text-dash-mute">
-        <span className="text-[9px] uppercase tracking-wider">system</span>
+      <div className="mb-3 rounded-lg border border-[#222]/50 bg-[#0A0A0A]/40 px-3 py-2 text-[11px] italic text-dash-mute">
+        <span className="text-[9px] uppercase tracking-wider text-[#555]">system</span>
         <div className="mt-1 whitespace-pre-wrap">{content}</div>
       </div>
     );
@@ -369,21 +373,24 @@ function MessageBubble({ role, content, streaming }: { role: string; content: st
   return (
     <div className={`mb-3 flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[80%] rounded-lg px-3 py-2 ${
+        className={`max-w-[80%] rounded-lg px-3.5 py-2.5 ${
           isUser
-            ? 'bg-dash-indigo/20 text-dash-text'
-            : 'bg-dash-bg/60 text-dash-text border border-dash-line'
+            ? 'bg-[#0070F3]/10 border border-[#0070F3]/20 text-dash-text'
+            : 'bg-[#111] border border-[#222] text-dash-text'
         }`}
       >
-        <div className="mb-1 text-[9px] uppercase tracking-wider text-dash-mute">
+        <div className="mb-1 flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-[#555]">
           {role}
-          {streaming && <span className="ml-1 animate-pulse">●</span>}
+          {streaming && <span className="streaming-dots"><span>●</span><span>●</span><span>●</span></span>}
         </div>
         {isUser ? (
           <div className="whitespace-pre-wrap text-xs leading-relaxed">{content}</div>
         ) : (
           <MarkdownMessage content={content} />
         )}
+        <div className="mt-1.5 text-[10px] text-[#444]">
+          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </div>
       </div>
     </div>
   );

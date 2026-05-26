@@ -10,6 +10,8 @@ import Pricing from './pages/Pricing.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Admin from './pages/Admin.jsx';
+import Settings from './pages/Settings.jsx';
+import NotFound from './pages/NotFound.jsx';
 import { AuthProvider, useAuth } from './lib/auth.jsx';
 
 function Protected({ children }) {
@@ -46,6 +48,15 @@ createRoot(document.getElementById('root')).render(
               </Protected>
             }
           />
+          <Route
+            path="/settings"
+            element={
+              <Protected>
+                <Settings />
+              </Protected>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -142,17 +142,19 @@ export default function NewDeploymentModal({ project, onClose, onSuccess }: Prop
   const addEnv = () => setEnvVars((arr) => [...arr, { key: '', value: '' }]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg border border-dash-line bg-dash-panel shadow-2xl">
-        <header className="flex items-center justify-between border-b border-dash-line px-5 py-3">
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="modal-content flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-[#222] bg-[#111] shadow-2xl">
+        <header className="flex items-center justify-between border-b border-[#222] px-5 py-3">
           <div>
-            <h2 className="text-sm font-semibold">Deploy {project.name}</h2>
+            <h2 className="text-sm font-semibold text-white">Deploy {project.name}</h2>
             <p className="text-[11px] text-dash-mute">
               Create a new project on Vercel or Render and trigger the first deploy.
             </p>
           </div>
-          <button onClick={onClose} className="text-dash-mute hover:text-dash-text" disabled={busy}>
-            ×
+          <button onClick={onClose} className="btn-icon" disabled={busy}>
+            <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+            </svg>
           </button>
         </header>
 

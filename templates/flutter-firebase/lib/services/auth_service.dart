@@ -28,10 +28,12 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<String?> registerWithEmail(String email, String password, String name) async {
+  Future<String?> registerWithEmail(String email, String password, {String? displayName}) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      await cred.user?.updateDisplayName(name);
+      if (displayName != null && displayName.isNotEmpty) {
+        await cred.user?.updateDisplayName(displayName);
+      }
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message ?? 'Registration failed';
@@ -59,7 +61,12 @@ class AuthService extends ChangeNotifier {
     await _auth.signOut();
   }
 
-  Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
+  Future<String?> sendPasswordReset(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return e.message ?? 'Failed to send reset email';
+    }
   }
 }

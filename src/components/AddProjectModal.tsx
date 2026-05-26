@@ -161,21 +161,23 @@ export default function AddProjectModal({ initial, onClose, onSaved }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="modal-backdrop fixed inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <form
         onSubmit={submit}
-        className="w-[440px] rounded-lg border border-dash-line bg-dash-panel p-5 shadow-2xl"
+        className="modal-content w-[440px] max-h-[85vh] overflow-y-auto rounded-xl border border-[#222] bg-[#111] p-5 shadow-2xl"
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-dash-text">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white">
             {initial ? 'Edit project' : 'Add project'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-dash-mute hover:bg-white/5 hover:text-dash-text"
+            className="btn-icon"
           >
-            ×
+            <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
 
@@ -353,18 +355,18 @@ export default function AddProjectModal({ initial, onClose, onSaved }: Props) {
 
         {error && <div className="mt-3 text-[11px] text-dash-err">{error}</div>}
 
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-dash-line bg-dash-panel2 px-3 py-1.5 text-xs text-dash-text"
+            className="btn-ghost"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="rounded-md bg-dash-indigo px-3 py-1.5 text-xs font-medium text-white hover:bg-dash-indigoBright disabled:opacity-50"
+            className="btn-primary"
           >
             {saving ? 'Saving…' : initial ? 'Save changes' : 'Add project'}
           </button>

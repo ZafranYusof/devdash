@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 type Tab = 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
 
 interface Props {
@@ -5,64 +7,138 @@ interface Props {
   onChange: (tab: Tab) => void;
 }
 
+interface SidebarSection {
+  label: string;
+  items: { id: Tab; label: string; icon: JSX.Element }[];
+}
+
 export default function Sidebar({ tab, onChange }: Props) {
-  const items: { id: Tab; label: string; icon: JSX.Element }[] = [
-    { id: 'projects', label: 'Projects', icon: <FolderIcon /> },
-    { id: 'deploys', label: 'Deploys', icon: <RadarIcon /> },
-    { id: 'uptime', label: 'Uptime', icon: <PulseIcon /> },
-    { id: 'time', label: 'Time', icon: <ClockIcon /> },
-    { id: 'deps', label: 'Deps', icon: <BoxIcon /> },
-    { id: 'automations', label: 'Automations', icon: <BoltIcon /> },
-    { id: 'dbhealth', label: 'DB Health', icon: <DbIcon /> },
-    { id: 'metrics', label: 'Metrics', icon: <ChartIcon /> },
-    { id: 'ports', label: 'Ports', icon: <PortIcon /> },
-    { id: 'build', label: 'Build code', icon: <BuildIcon /> },
-    { id: 'zerolive', label: 'Zero to Live', icon: <RocketIcon /> },
-    { id: 'aigen', label: 'AI Code Gen', icon: <SparkleIcon /> },
-    { id: 'templates', label: 'Templates', icon: <LayersIcon /> },
-    { id: 'snippets', label: 'Snippets', icon: <SnippetIcon /> },
-    { id: 'chat', label: 'Chat', icon: <ChatIcon /> },
-    { id: 'settings', label: 'Settings', icon: <GearIcon /> },
+  const [collapsed, setCollapsed] = useState(false);
+
+  const sections: SidebarSection[] = [
+    {
+      label: 'MAIN',
+      items: [
+        { id: 'projects', label: 'Projects', icon: <FolderIcon /> },
+        { id: 'deploys', label: 'Deploys', icon: <RadarIcon /> },
+        { id: 'uptime', label: 'Uptime', icon: <PulseIcon /> },
+      ],
+    },
+    {
+      label: 'MONITORING',
+      items: [
+        { id: 'time', label: 'Time', icon: <ClockIcon /> },
+        { id: 'deps', label: 'Deps', icon: <BoxIcon /> },
+        { id: 'ports', label: 'Ports', icon: <PortIcon /> },
+        { id: 'dbhealth', label: 'DB Health', icon: <DbIcon /> },
+        { id: 'metrics', label: 'Metrics', icon: <ChartIcon /> },
+      ],
+    },
+    {
+      label: 'BUILD',
+      items: [
+        { id: 'build', label: 'Build Code', icon: <BuildIcon /> },
+        { id: 'zerolive', label: 'Zero to Live', icon: <RocketIcon /> },
+        { id: 'aigen', label: 'AI Code Gen', icon: <SparkleIcon /> },
+        { id: 'templates', label: 'Templates', icon: <LayersIcon /> },
+        { id: 'snippets', label: 'Snippets', icon: <SnippetIcon /> },
+      ],
+    },
+    {
+      label: 'OTHER',
+      items: [
+        { id: 'automations', label: 'Automations', icon: <BoltIcon /> },
+        { id: 'chat', label: 'Chat', icon: <ChatIcon /> },
+        { id: 'settings', label: 'Settings', icon: <GearIcon /> },
+      ],
+    },
   ];
 
   return (
-    <aside className="no-drag flex w-52 flex-col border-r border-[#222] bg-[#0A0A0A] py-4">
-      <div className="px-4 pb-4">
-        <span className="text-sm font-semibold text-white tracking-tight">DevDash</span>
+    <aside className={`no-drag flex flex-col border-r border-[#222] bg-[#0A0A0A] py-3 transition-all duration-200 ${collapsed ? 'w-14' : 'w-52'}`}>
+      {/* Header */}
+      <div className={`flex items-center justify-between px-3 pb-3 ${collapsed ? 'justify-center' : ''}`}>
+        {!collapsed && (
+          <span className="text-sm font-semibold text-white tracking-tight">DevDash</span>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="btn-icon"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+        </button>
       </div>
-      <div className="h-px bg-[#222] mx-3 mb-2" />
-      <nav className="flex flex-col gap-0.5 px-2 flex-1 overflow-y-auto">
-        {items.map((it) => {
-          const active = it.id === tab;
-          return (
-            <button
-              key={it.id}
-              onClick={() => onChange(it.id)}
-              className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
-                active
-                  ? 'bg-white/10 text-white'
-                  : 'text-[#888] hover:bg-white/[0.04] hover:text-[#ccc]'
-              }`}
-            >
-              <span className={`flex h-4 w-4 items-center justify-center ${active ? 'text-white' : 'text-[#666]'}`}>
-                {it.icon}
-              </span>
-              <span className="truncate">{it.label}</span>
-            </button>
-          );
-        })}
+
+      <div className="h-px bg-[#222] mx-2 mb-1" />
+
+      {/* Navigation */}
+      <nav className="flex flex-col flex-1 overflow-y-auto px-1.5">
+        {sections.map((section, sIdx) => (
+          <div key={section.label}>
+            {sIdx > 0 && <div className="h-px bg-[#1a1a1a] mx-2 my-1.5" />}
+            {!collapsed && (
+              <div className="sidebar-section-label">{section.label}</div>
+            )}
+            <div className="flex flex-col gap-0.5">
+              {section.items.map((it) => {
+                const active = it.id === tab;
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => onChange(it.id)}
+                    title={collapsed ? it.label : undefined}
+                    className={`sidebar-item ${active ? 'active' : ''} ${collapsed ? 'justify-center px-2' : ''}`}
+                  >
+                    <span className={`sidebar-icon flex h-4 w-4 shrink-0 items-center justify-center ${active ? 'text-white' : 'text-[#666]'}`}>
+                      {it.icon}
+                    </span>
+                    {!collapsed && <span className="truncate">{it.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
-      <div className="h-px bg-[#222] mx-3 mt-2 mb-3" />
-      <div className="px-4 text-[11px] leading-relaxed text-[#444]">
-        <p>Solo dev companion.</p>
-        <p className="mt-1.5">
-          <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">Ctrl</kbd>
-          <span className="mx-0.5">+</span>
-          <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">K</kbd>
-          <span className="ml-1">palette</span>
-        </p>
+
+      {/* Footer */}
+      <div className="h-px bg-[#222] mx-2 mt-1.5 mb-2" />
+      <div className={`px-3 ${collapsed ? 'text-center' : ''}`}>
+        {!collapsed ? (
+          <div className="text-[10px] leading-relaxed text-[#444]">
+            <p className="flex items-center justify-between">
+              <span>Solo dev companion</span>
+              <span className="font-mono text-[#333]">v0.25.1</span>
+            </p>
+            <p className="mt-1.5">
+              <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">Ctrl</kbd>
+              <span className="mx-0.5">+</span>
+              <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">K</kbd>
+              <span className="ml-1">palette</span>
+            </p>
+          </div>
+        ) : (
+          <div className="text-[9px] text-[#333] font-mono text-center">0.25</div>
+        )}
       </div>
     </aside>
+  );
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

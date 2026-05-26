@@ -183,8 +183,8 @@ export default function CommandPalette({ open, onClose, projects, onOpenProject,
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/70 pt-24 backdrop-blur-sm">
-      <div className="w-[520px] overflow-hidden rounded-lg border border-[#222] bg-[#111] shadow-2xl">
+    <div className="modal-backdrop fixed inset-0 z-40 flex items-start justify-center bg-black/70 pt-24 backdrop-blur-sm">
+      <div className="modal-content w-[520px] overflow-hidden rounded-xl border border-[#222] bg-[#111] shadow-2xl">
         <input
           autoFocus
           value={query}

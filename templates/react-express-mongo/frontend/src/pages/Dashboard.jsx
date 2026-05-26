@@ -1,92 +1,95 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/api.js';
-import { useAuth } from '../lib/auth.jsx';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
-  const [stripeStatus, setStripeStatus] = useState(null);
-  const [err, setErr] = useState('');
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const s = await api('/api/payments/status');
-        setStripeStatus(s);
-      } catch (ex) {
-        setErr(ex.message);
-      }
-    })();
-  }, []);
-
-  const upgrade = async () => {
-    try {
-      const res = await api('/api/payments/checkout', { method: 'POST' });
-      window.location.href = res.url;
-    } catch (ex) {
-      setErr(ex.message);
-    }
-  };
-
-  const portal = async () => {
-    try {
-      const res = await api('/api/payments/portal', { method: 'POST' });
-      window.location.href = res.url;
-    } catch (ex) {
-      setErr(ex.message);
-    }
-  };
+  const user = { name: 'User' };
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Welcome{user?.name ? ', ' + user.name : ''}</h1>
-          <p className="text-sm text-slate-400">{user?.email}</p>
+    <div className="min-h-screen bg-[#0A0A0A] font-[Inter,sans-serif]">
+      {/* Header */}
+      <header className="border-b border-[#222] px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link to="/" className="text-xl font-bold text-white">{'{{DISPLAY_NAME}}'}</Link>
+          <nav className="flex items-center gap-4">
+            <Link to="/settings" className="text-sm text-gray-400 hover:text-white transition">Settings</Link>
+            <button
+              onClick={() => { localStorage.removeItem('token'); window.location.href = '/login'; }}
+              className="text-sm text-gray-400 hover:text-white transition"
+            >
+              Sign out
+            </button>
+          </nav>
         </div>
-        <button onClick={logout} className="rounded-md border border-slate-700 px-3 py-1.5 text-sm hover:border-slate-500">
-          Sign out
-        </button>
       </header>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
-          <div className="text-xs uppercase tracking-wider text-slate-500">Plan</div>
-          <div className="mt-1 text-xl font-semibold capitalize">{user?.plan}</div>
-          {user?.subscriptionStatus && (
-            <div className="mt-1 text-xs text-slate-400">Status: {user.subscriptionStatus}</div>
-          )}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Welcome */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Welcome back, {user.name}</h1>
+          <p className="mt-1 text-gray-400">Here's what's happening with your projects today.</p>
         </div>
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
-          <div className="text-xs uppercase tracking-wider text-slate-500">Role</div>
-          <div className="mt-1 text-xl font-semibold capitalize">{user?.role}</div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Total Users', value: '2,847', change: '+12.5%' },
+            { label: 'Revenue', value: '$45,231', change: '+8.2%' },
+            { label: 'Active Projects', value: '12', change: '+2' },
+            { label: 'API Calls', value: '1.2M', change: '+18.7%' },
+          ].map((stat, i) => (
+            <div key={i} className="rounded-lg border border-[#222] bg-[#111] p-5">
+              <p className="text-sm text-gray-400">{stat.label}</p>
+              <p className="mt-2 text-2xl font-bold text-white">{stat.value}</p>
+              <p className="mt-1 text-xs text-green-400">{stat.change} from last month</p>
+            </div>
+          ))}
         </div>
-      </section>
 
-      <section className="mt-8 flex flex-wrap gap-2">
-        {user?.role === 'admin' && (
-          <Link to="/admin" className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/20">
-            Admin panel
-          </Link>
-        )}
-        {stripeStatus?.enabled ? (
-          user?.plan === 'pro' ? (
-            <button onClick={portal} className="rounded-md border border-slate-700 px-4 py-2 text-sm hover:border-slate-500">
-              Manage subscription
-            </button>
-          ) : (
-            <button onClick={upgrade} className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400">
-              Upgrade to Pro
-            </button>
-          )
-        ) : (
-          <Link to="/pricing" className="rounded-md border border-slate-700 px-4 py-2 text-sm hover:border-slate-500">
-            Pricing
-          </Link>
-        )}
-      </section>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2 rounded-lg border border-[#222] bg-[#111] p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
+            <div className="space-y-4">
+              {[
+                { action: 'New user registered', detail: 'john@example.com', time: '2 minutes ago' },
+                { action: 'Payment received', detail: '$29.00 - Pro plan', time: '1 hour ago' },
+                { action: 'API key generated', detail: 'Production environment', time: '3 hours ago' },
+                { action: 'Project deployed', detail: 'my-saas-app v2.1.0', time: '5 hours ago' },
+                { action: 'Team member invited', detail: 'sarah@company.com', time: '1 day ago' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center justify-between py-3 border-b border-[#222] last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-white">{item.action}</p>
+                    <p className="text-xs text-gray-500">{item.detail}</p>
+                  </div>
+                  <span className="text-xs text-gray-500 whitespace-nowrap">{item.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {err && <p className="mt-6 text-sm text-red-400">{err}</p>}
-    </main>
+          {/* Quick Actions */}
+          <div className="rounded-lg border border-[#222] bg-[#111] p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+            <div className="space-y-3">
+              {[
+                { label: 'Create new project', icon: '➕' },
+                { label: 'Invite team member', icon: '👥' },
+                { label: 'View analytics', icon: '📊' },
+                { label: 'Generate API key', icon: '🔑' },
+                { label: 'View documentation', icon: '📖' },
+              ].map((action, i) => (
+                <button
+                  key={i}
+                  className="w-full flex items-center gap-3 rounded-md border border-[#222] bg-[#0A0A0A] px-4 py-3 text-sm text-gray-300 hover:border-[#444] hover:text-white transition"
+                >
+                  <span>{action.icon}</span>
+                  <span>{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }

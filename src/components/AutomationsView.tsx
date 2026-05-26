@@ -105,15 +105,20 @@ export default function AutomationsView() {
 
       <div className="min-h-0 flex-1 overflow-auto">
         {jobs.length === 0 ? (
-          <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-dash-line text-sm text-dash-mute">
-            No automations yet. Create one to auto-pull or auto-deploy on a cron.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M9 1L3 9h4l-1 6 6-8H8l1-6z" strokeLinejoin="round" />
+            </svg>
+            <div className="empty-state-title">No automations yet</div>
+            <div className="empty-state-subtitle">Create one to auto-pull or auto-deploy on a cron schedule</div>
+            <button onClick={openNew} className="btn-primary">+ New automation</button>
           </div>
         ) : (
           <div className="space-y-2">
             {jobs.map((j) => (
               <div
                 key={j.id}
-                className={`rounded-lg border border-dash-line bg-dash-panel/40 p-3 ${j.enabled ? '' : 'opacity-60'}`}
+                className={`card p-3 ${j.enabled ? '' : 'opacity-60'}`}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
@@ -137,31 +142,31 @@ export default function AutomationsView() {
                   <div className="flex flex-col gap-1">
                     <button
                       onClick={() => handleRunNow(j)}
-                      className="rounded border border-dash-line px-2 py-0.5 text-[11px] hover:bg-white/5"
+                      className="btn-soft"
                     >
                       Run now
                     </button>
                     <button
                       onClick={() => openRuns(j.id)}
-                      className="rounded border border-dash-line px-2 py-0.5 text-[11px] hover:bg-white/5"
+                      className="btn-soft"
                     >
                       History
                     </button>
                     <button
                       onClick={() => handleToggle(j)}
-                      className="rounded border border-dash-line px-2 py-0.5 text-[11px] hover:bg-white/5"
+                      className="btn-soft"
                     >
                       {j.enabled ? 'Disable' : 'Enable'}
                     </button>
                     <button
                       onClick={() => setEditing({ ...j })}
-                      className="rounded border border-dash-line px-2 py-0.5 text-[11px] hover:bg-white/5"
+                      className="btn-soft"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(j.id)}
-                      className="rounded border border-red-500/40 px-2 py-0.5 text-[11px] text-red-400 hover:bg-red-500/10"
+                      className="btn-soft text-red-400 border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
                     >
                       Delete
                     </button>
@@ -174,11 +179,18 @@ export default function AutomationsView() {
       </div>
 
       {editing && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-lg border border-dash-line bg-dash-panel p-4">
-            <h3 className="mb-3 text-sm font-semibold">
-              {editing.id ? 'Edit automation' : 'New automation'}
-            </h3>
+        <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="modal-content w-full max-w-lg rounded-xl border border-[#222] bg-[#111] p-5 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-white">
+                {editing.id ? 'Edit automation' : 'New automation'}
+              </h3>
+              <button onClick={() => setEditing(null)} className="btn-icon">
+                <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] text-dash-mute">Project</label>
@@ -234,16 +246,16 @@ export default function AutomationsView() {
                 Enabled
               </label>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setEditing(null)}
-                className="rounded border border-dash-line px-3 py-1 text-xs hover:bg-white/5"
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="rounded bg-dash-indigo px-3 py-1 text-xs text-white hover:bg-dash-indigoBright"
+                className="btn-primary"
               >
                 Save
               </button>
@@ -253,21 +265,23 @@ export default function AutomationsView() {
       )}
 
       {runsFor && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-          <div className="flex max-h-[70vh] w-full max-w-lg flex-col rounded-lg border border-dash-line bg-dash-panel p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Recent runs</h3>
+        <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="modal-content flex max-h-[70vh] w-full max-w-lg flex-col rounded-xl border border-[#222] bg-[#111] shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[#222]">
+              <h3 className="text-sm font-semibold text-white">Recent runs</h3>
               <button
                 onClick={() => setRunsFor(null)}
-                className="text-xs text-dash-mute hover:text-dash-text"
+                className="btn-icon"
               >
-                Close
+                <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+                </svg>
               </button>
             </div>
+            <div className="flex-1 overflow-auto p-4">
             {runsFor.runs.length === 0 ? (
               <div className="text-xs text-dash-mute">No runs yet.</div>
             ) : (
-              <div className="flex-1 overflow-auto">
                 <table className="w-full text-xs">
                   <thead className="text-left text-dash-mute">
                     <tr>
@@ -290,8 +304,8 @@ export default function AutomationsView() {
                     ))}
                   </tbody>
                 </table>
-              </div>
             )}
+            </div>
           </div>
         </div>
       )}

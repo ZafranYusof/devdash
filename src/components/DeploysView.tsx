@@ -179,12 +179,42 @@ export default function DeploysView() {
 
       <div className="flex-1 overflow-y-auto pb-4">
         {loading && items.length === 0 ? (
-          <div className="py-12 text-center text-sm text-dash-mute">Loading deploys…</div>
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="card p-3">
+                <div className="flex items-center gap-3">
+                  <div className="skeleton h-6 w-16 rounded-md" />
+                  <div className="flex-1">
+                    <div className="skeleton h-4 w-40 mb-1.5" />
+                    <div className="skeleton h-3 w-64" />
+                    <div className="skeleton h-3 w-32 mt-1" />
+                  </div>
+                  <div className="flex gap-1.5">
+                    <div className="skeleton h-6 w-16" />
+                    <div className="skeleton h-6 w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-sm text-dash-mute">
-            {items.length === 0
-              ? 'No deploys yet. Register a project with a Vercel/Render ID in Projects, then refresh.'
-              : `No deploys match filter "${filter}".`}
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="8" cy="8" r="6" />
+              <circle cx="8" cy="8" r="3" />
+              <path d="M8 8 L12 5" />
+            </svg>
+            <div className="empty-state-title">
+              {items.length === 0 ? 'No deploys tracked' : `No deploys match "${filter}"`}
+            </div>
+            <div className="empty-state-subtitle">
+              {items.length === 0
+                ? 'Register a project with a Vercel/Render ID, then refresh'
+                : 'Try a different filter'}
+            </div>
+            {items.length === 0 && (
+              <button onClick={refresh} className="btn-primary">Refresh</button>
+            )}
           </div>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -205,7 +235,7 @@ function DeployRow({ deploy, onRedeploy }: { deploy: DeployItem; onRedeploy: () 
   };
 
   return (
-    <li className="card flex flex-col gap-2 p-3 md:flex-row md:items-center md:justify-between">
+    <li className="card flex flex-col gap-2 p-3 md:flex-row md:items-center md:justify-between hover:border-[#333]">
       <div className="flex items-start gap-3">
         <StatusBadge status={deploy.status} />
         <div className="min-w-0 flex-1">

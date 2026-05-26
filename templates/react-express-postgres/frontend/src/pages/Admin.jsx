@@ -1,136 +1,139 @@
-import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { api } from '../lib/api.js';
-import { useAuth } from '../lib/auth.jsx';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Admin() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [q, setQ] = useState('');
-  const [err, setErr] = useState('');
-  const [busy, setBusy] = useState(true);
+  const [activeTab, setActiveTab] = useState('users');
 
-  const load = async () => {
-    setBusy(true);
-    try {
-      const [s, u] = await Promise.all([api('/api/admin/stats'), api(`/api/admin/users?q=${encodeURIComponent(q)}`)]);
-      setStats(s);
-      setUsers(u.users);
-    } catch (ex) {
-      setErr(ex.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, []);
-
-  if (user && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
-
-  const setPlan = async (id, plan) => {
-    try {
-      await api(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan }) });
-      void load();
-    } catch (ex) {
-      setErr(ex.message);
-    }
-  };
-
-  const setRole = async (id, role) => {
-    try {
-      await api(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ role }) });
-      void load();
-    } catch (ex) {
-      setErr(ex.message);
-    }
-  };
+  const users = [
+    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', joined: '2024-01-15' },
+    { id: 2, name: 'Sarah Chen', email: 'sarah@example.com', role: 'User', status: 'Active', joined: '2024-02-20' },
+    { id: 3, name: 'Marcus Johnson', email: 'marcus@example.com', role: 'User', status: 'Active', joined: '2024-03-10' },
+    { id: 4, name: 'Aisha Patel', email: 'aisha@example.com', role: 'Moderator', status: 'Inactive', joined: '2024-01-28' },
+    { id: 5, name: 'David Kim', email: 'david@example.com', role: 'User', status: 'Active', joined: '2024-04-05' },
+  ];
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin</h1>
-        <Link to="/dashboard" className="rounded-md border border-slate-700 px-3 py-1.5 text-sm hover:border-slate-500">
-          ← Dashboard
-        </Link>
+    <div className="min-h-screen bg-[#0A0A0A] font-[Inter,sans-serif]">
+      {/* Header */}
+      <header className="border-b border-[#222] px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link to="/" className="text-xl font-bold text-white">{'{{DISPLAY_NAME}}'}</Link>
+          <nav className="flex items-center gap-4">
+            <Link to="/dashboard" className="text-sm text-gray-400 hover:text-white transition">Dashboard</Link>
+            <Link to="/settings" className="text-sm text-gray-400 hover:text-white transition">Settings</Link>
+          </nav>
+        </div>
       </header>
 
-      <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Total users" value={stats?.totalUsers ?? '—'} />
-        <Stat label="Pro users" value={stats?.proUsers ?? '—'} />
-        <Stat label="New (24h)" value={stats?.newLast24h ?? '—'} />
-        <Stat label="Conversion" value={stats ? `${stats.conversionRate}%` : '—'} />
-      </section>
-
-      <section className="mt-8">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">Users</h2>
-          <div className="flex gap-2">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && load()}
-              placeholder="Search email/name"
-              className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm"
-            />
-            <button onClick={load} className="rounded-md border border-slate-700 px-3 py-1.5 text-sm hover:border-slate-500">
-              Search
-            </button>
-          </div>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Admin Panel</h1>
+          <p className="mt-1 text-gray-400">Manage users and monitor system health.</p>
         </div>
-        {err && <p className="mt-3 text-sm text-red-400">{err}</p>}
-        <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-900/60 text-xs uppercase tracking-wider text-slate-400">
-              <tr>
-                <th className="px-3 py-2 text-left font-normal">Email</th>
-                <th className="px-3 py-2 text-left font-normal">Name</th>
-                <th className="px-3 py-2 text-left font-normal">Role</th>
-                <th className="px-3 py-2 text-left font-normal">Plan</th>
-                <th className="px-3 py-2 text-left font-normal">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {busy && users.length === 0 ? (
-                <tr><td colSpan={5} className="px-3 py-6 text-center text-slate-500">Loading…</td></tr>
-              ) : users.length === 0 ? (
-                <tr><td colSpan={5} className="px-3 py-6 text-center text-slate-500">No users.</td></tr>
-              ) : (
-                users.map((u) => (
-                  <tr key={u._id} className="border-t border-slate-800">
-                    <td className="px-3 py-2">{u.email}</td>
-                    <td className="px-3 py-2 text-slate-300">{u.name || '—'}</td>
-                    <td className="px-3 py-2">
-                      <select value={u.role} onChange={(e) => setRole(u._id, e.target.value)} className="rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs">
-                        <option value="user">user</option>
-                        <option value="admin">admin</option>
-                      </select>
-                    </td>
-                    <td className="px-3 py-2">
-                      <select value={u.plan} onChange={(e) => setPlan(u._id, e.target.value)} className="rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs">
-                        <option value="free">free</option>
-                        <option value="pro">pro</option>
-                      </select>
-                    </td>
-                    <td className="px-3 py-2 text-xs text-slate-500">{new Date(u.createdAt).toLocaleDateString()}</td>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Total Users', value: '2,847' },
+            { label: 'Active Today', value: '423' },
+            { label: 'New This Week', value: '89' },
+            { label: 'Revenue (MTD)', value: '$12,450' },
+          ].map((stat, i) => (
+            <div key={i} className="rounded-lg border border-[#222] bg-[#111] p-5">
+              <p className="text-sm text-gray-400">{stat.label}</p>
+              <p className="mt-2 text-2xl font-bold text-white">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-[#222] mb-6">
+          <nav className="flex gap-6">
+            {['users', 'analytics', 'logs'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-3 text-sm font-medium capitalize transition ${activeTab === tab ? 'text-white border-b-2 border-[#0070F3]' : 'text-gray-400 hover:text-white'}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Users Table */}
+        {activeTab === 'users' && (
+          <div className="rounded-lg border border-[#222] bg-[#111] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#222]">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Joined</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
-  );
-}
+                </thead>
+                <tbody className="divide-y divide-[#222]">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-[#1a1a1a] transition">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="text-sm font-medium text-white">{user.name}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-full bg-[#222] px-2.5 py-0.5 text-xs font-medium text-gray-300">
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${user.status === 'Active' ? 'bg-green-500/10 text-green-400' : 'bg-gray-500/10 text-gray-400'}`}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-400">{user.joined}</td>
+                      <td className="px-6 py-4">
+                        <button className="text-sm text-[#0070F3] hover:text-[#3291ff] transition">Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
-function Stat({ label, value }) {
-  return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
-      <div className="text-xs uppercase tracking-wider text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold">{value}</div>
+        {activeTab === 'analytics' && (
+          <div className="rounded-lg border border-[#222] bg-[#111] p-8 text-center">
+            <p className="text-gray-400">Analytics dashboard coming soon.</p>
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="rounded-lg border border-[#222] bg-[#111] p-6">
+            <div className="space-y-3">
+              {[
+                { time: '17:23:01', level: 'INFO', msg: 'User john@example.com logged in' },
+                { time: '17:22:45', level: 'WARN', msg: 'Rate limit approaching for API key sk_live_***' },
+                { time: '17:21:30', level: 'INFO', msg: 'Payment processed: $29.00' },
+                { time: '17:20:15', level: 'ERROR', msg: 'Failed to send email to invalid@domain' },
+                { time: '17:19:00', level: 'INFO', msg: 'New user registered: david@example.com' },
+              ].map((log, i) => (
+                <div key={i} className="flex items-start gap-3 font-mono text-xs">
+                  <span className="text-gray-500">{log.time}</span>
+                  <span className={`font-semibold ${log.level === 'ERROR' ? 'text-red-400' : log.level === 'WARN' ? 'text-yellow-400' : 'text-green-400'}`}>
+                    [{log.level}]
+                  </span>
+                  <span className="text-gray-300">{log.msg}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

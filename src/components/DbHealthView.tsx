@@ -131,8 +131,18 @@ export default function DbHealthView() {
 
       <div className="min-h-0 flex-1 overflow-auto">
         {targets.length === 0 ? (
-          <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-dash-line text-sm text-dash-mute">
-            No DB targets configured yet.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <ellipse cx="8" cy="3.5" rx="5" ry="1.75" />
+              <path d="M3 3.5v9c0 0.97 2.24 1.75 5 1.75s5-0.78 5-1.75v-9" />
+              <path d="M3 8c0 0.97 2.24 1.75 5 1.75s5-0.78 5-1.75" />
+            </svg>
+            <div className="empty-state-title">No database targets</div>
+            <div className="empty-state-subtitle">Add a connection or auto-detect from env files</div>
+            <div className="flex gap-2">
+              <button onClick={autoDetect} disabled={projects.length === 0} className="btn-soft">Auto-detect</button>
+              <button onClick={openNew} className="btn-primary">+ New target</button>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -142,7 +152,7 @@ export default function DbHealthView() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-lg border border-dash-line bg-dash-panel/40 p-3"
+                  className={`card p-3 ${r?.ok === true ? 'card-status-ok' : r?.ok === false ? 'card-status-err' : ''}`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
@@ -188,19 +198,19 @@ export default function DbHealthView() {
                       <button
                         onClick={() => ping(t.id)}
                         disabled={busy}
-                        className="rounded border border-dash-line px-2 py-0.5 text-[11px] hover:bg-white/5 disabled:opacity-50"
+                        className="btn-soft"
                       >
                         {busy ? 'Pinging...' : 'Ping'}
                       </button>
                       <button
                         onClick={() => setEditing({ ...t })}
-                        className="rounded border border-dash-line px-2 py-0.5 text-[11px] hover:bg-white/5"
+                        className="btn-soft"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => del(t.id)}
-                        className="rounded border border-red-500/40 px-2 py-0.5 text-[11px] text-red-400 hover:bg-red-500/10"
+                        className="btn-soft text-red-400 border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
                       >
                         Delete
                       </button>
@@ -214,11 +224,18 @@ export default function DbHealthView() {
       </div>
 
       {editing && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-lg border border-dash-line bg-dash-panel p-4">
-            <h3 className="mb-3 text-sm font-semibold">
-              {editing.id ? 'Edit DB target' : 'New DB target'}
-            </h3>
+        <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="modal-content w-full max-w-lg rounded-xl border border-[#222] bg-[#111] p-5 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-white">
+                {editing.id ? 'Edit DB target' : 'New DB target'}
+              </h3>
+              <button onClick={() => setEditing(null)} className="btn-icon">
+                <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] text-dash-mute">Project</label>
@@ -268,16 +285,16 @@ export default function DbHealthView() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setEditing(null)}
-                className="rounded border border-dash-line px-3 py-1 text-xs hover:bg-white/5"
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={save}
-                className="rounded bg-dash-indigo px-3 py-1 text-xs text-white hover:bg-dash-indigoBright"
+                className="btn-primary"
               >
                 Save
               </button>

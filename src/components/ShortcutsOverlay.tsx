@@ -39,22 +39,24 @@ export default function ShortcutsOverlay({ open, onClose }: Props) {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-lg border border-dash-line bg-dash-panel shadow-2xl"
+        className="modal-content w-full max-w-lg rounded-xl border border-[#222] bg-[#111] shadow-2xl"
       >
-        <div className="flex items-center justify-between border-b border-dash-line px-4 py-3">
+        <div className="flex items-center justify-between border-b border-[#222] px-4 py-3">
           <div>
-            <h2 className="text-sm font-semibold text-dash-text">Keyboard shortcuts</h2>
+            <h2 className="text-sm font-semibold text-white">Keyboard shortcuts</h2>
             <p className="text-[10px] text-dash-mute">Press Esc to close</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 text-dash-mute hover:bg-white/5 hover:text-dash-text"
+            className="btn-icon"
           >
-            ×
+            <svg viewBox="0 0 10 10" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 2l6 6M8 2l-6 6" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
 

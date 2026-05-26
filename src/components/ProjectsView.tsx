@@ -162,14 +162,47 @@ export default function ProjectsView({ onOpenProject }: Props) {
 
       <div className="flex-1 overflow-y-auto">
         {loading && statuses.length === 0 ? (
-          <div className="py-12 text-center text-sm text-[#666]">Loading projects…</div>
+          <div className="grid grid-cols-1 gap-3 pb-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="card p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="skeleton h-2 w-2 rounded-full" />
+                  <div className="skeleton h-4 w-32" />
+                  <div className="skeleton h-4 w-16" />
+                </div>
+                <div className="skeleton h-3 w-48 mb-2" />
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="skeleton h-8 w-full" />
+                  <div className="skeleton h-8 w-full" />
+                  <div className="skeleton h-8 w-full" />
+                  <div className="skeleton h-8 w-full" />
+                </div>
+                <div className="skeleton h-12 w-full mb-3" />
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((j) => (
+                    <div key={j} className="skeleton h-6 w-14" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : statuses.length === 0 ? (
-          <div className="py-12 text-center text-sm text-[#666]">
-            No projects yet. Click "+ Add project" to register your first one.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M1.5 4a1 1 0 011-1h3l1.5 1.5H13a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V4z" />
+            </svg>
+            <div className="empty-state-title">No projects yet</div>
+            <div className="empty-state-subtitle">Register your first project to start tracking</div>
+            <button onClick={() => setShowAdd(true)} className="btn-primary">+ Add project</button>
           </div>
         ) : filteredStatuses.length === 0 ? (
-          <div className="py-12 text-center text-sm text-[#666]">
-            No projects match the selected tags.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M1.5 4a1 1 0 011-1h3l1.5 1.5H13a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V4z" />
+            </svg>
+            <div className="empty-state-title">No matching projects</div>
+            <div className="empty-state-subtitle">Try adjusting your tag filters</div>
+            <button onClick={() => setSelectedTags(new Set())} className="btn-soft">Clear filters</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 pb-4 md:grid-cols-2">
@@ -340,8 +373,14 @@ function ProjectCard({
   const devManagedRunning = devserver?.running;
   const frameworkLabel = framework?.label ?? 'unknown';
 
+  const cardStatusClass = !git.ok
+    ? 'card-status-err'
+    : git.dirty
+    ? 'card-status-warn'
+    : 'card-status-ok';
+
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-[#222] bg-[#111] p-4 transition-all duration-150 hover:border-[#333]">
+    <div className={`card flex flex-col gap-3 p-4 ${cardStatusClass}`}>
       <div className="flex items-start justify-between gap-2">
         <button onClick={() => onOpen('overview')} className="min-w-0 flex-1 cursor-pointer text-left">
           <div className="flex flex-wrap items-center gap-2">
@@ -591,7 +630,7 @@ function IconBtn({
     <button
       title={title}
       onClick={onClick}
-      className="rounded p-1 text-[#666] hover:bg-white/[0.04] hover:text-white transition-all duration-150"
+      className="btn-icon"
     >
       {children}
     </button>

@@ -150,15 +150,24 @@ export default function MetricsView() {
 
       <div className="min-h-0 flex-1 overflow-auto">
         {!selected && (
-          <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-dash-line text-sm text-dash-mute">
-            Select a project.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 13V2M2 13h12" strokeLinecap="round" />
+              <path d="M5 11V7M8 11V4M11 11V9" strokeLinecap="round" />
+            </svg>
+            <div className="empty-state-title">Select a project</div>
+            <div className="empty-state-subtitle">Choose a project from the dropdown to view metrics</div>
           </div>
         )}
 
         {selected && !isRender && !isVercel && (
-          <div className="rounded-lg border border-dash-line bg-dash-panel/40 p-4 text-sm text-dash-mute">
-            Metrics available for projects deployed on Vercel or Render. This project has no deploy
-            provider configured.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 13V2M2 13h12" strokeLinecap="round" />
+              <path d="M5 11V7M8 11V4M11 11V9" strokeLinecap="round" />
+            </svg>
+            <div className="empty-state-title">No deploy provider</div>
+            <div className="empty-state-subtitle">Metrics are available for projects deployed on Vercel or Render</div>
           </div>
         )}
 
@@ -171,7 +180,7 @@ export default function MetricsView() {
             )}
             <div className="rounded-lg border border-dash-line bg-dash-panel/40 p-4">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold">CPU</h3>
+                <h3 className="text-sm font-semibold text-white">CPU</h3>
                 <span className="text-xs text-dash-mute">
                   {renderData.cpu.length} points
                   {renderData.cpu.length > 0 &&
@@ -186,7 +195,7 @@ export default function MetricsView() {
             </div>
             <div className="rounded-lg border border-dash-line bg-dash-panel/40 p-4">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Memory</h3>
+                <h3 className="text-sm font-semibold text-white">Memory</h3>
                 <span className="text-xs text-dash-mute">
                   {renderData.memory.length} points
                   {renderData.memory.length > 0 &&
@@ -213,17 +222,17 @@ export default function MetricsView() {
             {vercelData.ok && (
               <>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-dash-line bg-dash-panel/40 p-4">
+                  <div className="card p-4">
                     <div className="text-xs text-dash-mute">Visitors ({vercelData.periodDays}d)</div>
-                    <div className="mt-1 text-2xl font-semibold">
+                    <div className="mt-1 text-2xl font-semibold text-white">
                       {vercelData.totalVisitors?.toLocaleString() ?? '-'}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-dash-line bg-dash-panel/40 p-4">
+                  <div className="card p-4">
                     <div className="text-xs text-dash-mute">
                       Pageviews ({vercelData.periodDays}d)
                     </div>
-                    <div className="mt-1 text-2xl font-semibold">
+                    <div className="mt-1 text-2xl font-semibold text-white">
                       {vercelData.totalPageviews?.toLocaleString() ?? '-'}
                     </div>
                   </div>

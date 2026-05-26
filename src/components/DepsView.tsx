@@ -78,7 +78,38 @@ export default function DepsView({ onOpenProject }: Props) {
       </div>
       <div className="flex-1 overflow-y-auto pb-4">
         {loading ? (
-          <div className="py-12 text-center text-sm text-dash-mute">Loading…</div>
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="skeleton h-4 w-32" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="skeleton h-5 w-16" />
+                    <div className="skeleton h-5 w-16" />
+                    <div className="skeleton h-5 w-16" />
+                  </div>
+                </div>
+                <div className="skeleton h-3 w-48 mb-3" />
+                <div className="flex gap-2">
+                  <div className="skeleton h-6 w-16" />
+                  <div className="skeleton h-6 w-14" />
+                  <div className="skeleton h-6 w-16" />
+                  <div className="skeleton h-6 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 5l6-3 6 3v6l-6 3-6-3V5z" strokeLinejoin="round" />
+              <path d="M2 5l6 3 6-3M8 8v7" />
+            </svg>
+            <div className="empty-state-title">No projects to scan</div>
+            <div className="empty-state-subtitle">Add projects first, then scan for outdated dependencies</div>
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             {projects.map((p) => {
@@ -197,8 +228,8 @@ export default function DepsView({ onOpenProject }: Props) {
       </div>
 
       {confirmFor && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" onClick={() => setConfirmFor(null)}>
-          <div className="w-full max-w-md rounded-lg border border-dash-line bg-dash-panel p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setConfirmFor(null)}>
+          <div className="modal-content w-full max-w-md rounded-xl border border-[#222] bg-[#111] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-sm font-semibold text-dash-text">Safe update {confirmFor.name}?</h2>
             <ul className="mt-3 space-y-1 text-xs text-dash-mute">
               <li>· Backs up package.json + lockfile</li>
@@ -217,8 +248,8 @@ export default function DepsView({ onOpenProject }: Props) {
       )}
 
       {resultModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" onClick={() => setResultModal(null)}>
-          <div className="w-full max-w-2xl rounded-lg border border-dash-line bg-dash-panel shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setResultModal(null)}>
+          <div className="modal-content w-full max-w-2xl rounded-xl border border-[#222] bg-[#111] shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-dash-line px-4 py-3">
               <h2 className="text-sm font-semibold text-dash-text">
                 {resultModal.result.ok ? '✅ Safe update done' : resultModal.result.rolledBack ? '↩ Rolled back' : '❌ Failed'} · {resultModal.name}

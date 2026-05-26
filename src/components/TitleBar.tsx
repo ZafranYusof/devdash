@@ -6,35 +6,41 @@ interface Props {
 
 export default function TitleBar({ onMinimize, onMaximize, onClose }: Props) {
   return (
-    <header className="drag flex h-9 items-center justify-between border-b border-[#222] bg-[#0A0A0A] px-3 text-xs">
+    <header className="drag flex h-9 items-center justify-between border-b border-[#1a1a1a] bg-[#0A0A0A] px-3 text-xs">
       <div className="flex items-center gap-2">
         <span className="flex h-4 w-4 items-center justify-center">
           <LogoMark />
         </span>
         <span className="font-semibold tracking-tight text-white">DevDash</span>
-        <span className="text-[#444]">v0.2.0</span>
+        <span className="text-[10px] font-mono text-[#333]">v0.25.1</span>
       </div>
-      <div className="no-drag flex items-center gap-1">
+      <div className="no-drag flex items-center gap-0.5">
         <button
           title="Minimize"
           onClick={onMinimize}
-          className="rounded px-2 py-1 text-[#666] hover:bg-white/[0.04] hover:text-white transition-all duration-150"
+          className="rounded px-2.5 py-1 text-[#555] hover:bg-white/[0.06] hover:text-white transition-all duration-150 active:scale-[0.95]"
         >
-          –
+          <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" fill="currentColor">
+            <rect x="0" y="4.5" width="10" height="1" rx="0.5" />
+          </svg>
         </button>
         <button
           title="Maximize / restore"
           onClick={onMaximize}
-          className="rounded px-2 py-1 text-[#666] hover:bg-white/[0.04] hover:text-white transition-all duration-150"
+          className="rounded px-2.5 py-1 text-[#555] hover:bg-white/[0.06] hover:text-white transition-all duration-150 active:scale-[0.95]"
         >
-          ▢
+          <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <rect x="1" y="1" width="8" height="8" rx="1" />
+          </svg>
         </button>
         <button
           title="Close"
           onClick={onClose}
-          className="rounded px-2 py-1 text-[#666] hover:bg-[#EE0000]/80 hover:text-white transition-all duration-150"
+          className="rounded px-2.5 py-1 text-[#555] hover:bg-[#EE0000]/80 hover:text-white transition-all duration-150 active:scale-[0.95]"
         >
-          ×
+          <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="1.4">
+            <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" strokeLinecap="round" />
+          </svg>
         </button>
       </div>
     </header>

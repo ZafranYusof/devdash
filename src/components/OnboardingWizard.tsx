@@ -113,18 +113,18 @@ export default function OnboardingWizard({ onComplete }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="flex h-[90vh] w-full max-w-3xl flex-col rounded-lg border border-dash-line bg-dash-panel shadow-2xl">
-        <header className="flex items-center justify-between border-b border-dash-line px-6 py-4">
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div className="modal-content flex h-[90vh] w-full max-w-3xl flex-col rounded-xl border border-[#222] bg-[#111] shadow-2xl">
+        <header className="flex items-center justify-between border-b border-[#222] px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold">Welcome to DevDash</h2>
+            <h2 className="text-lg font-semibold text-white">Welcome to DevDash</h2>
             <p className="text-xs text-dash-mute">Quick setup. Skip any step you want.</p>
           </div>
           <div className="flex items-center gap-3">
             <StepDots current={step} />
             <button
               onClick={skipAll}
-              className="text-[11px] text-dash-mute hover:text-dash-text"
+              className="btn-ghost"
             >
               Skip setup
             </button>

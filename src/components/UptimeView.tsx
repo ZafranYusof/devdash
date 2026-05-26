@@ -53,10 +53,32 @@ export default function UptimeView({ onOpenProject }: Props) {
 
       <div className="flex-1 overflow-y-auto pb-4">
         {loading ? (
-          <div className="py-12 text-center text-sm text-dash-mute">Loading…</div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="card p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="skeleton h-2 w-2 rounded-full" />
+                    <div className="skeleton h-4 w-28" />
+                  </div>
+                  <div className="skeleton h-3 w-16" />
+                </div>
+                <div className="skeleton h-3 w-48 mb-2" />
+                <div className="skeleton h-10 w-full mb-2" />
+                <div className="flex justify-between">
+                  <div className="skeleton h-3 w-20" />
+                  <div className="skeleton h-3 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : summaries.length === 0 ? (
-          <div className="py-12 text-center text-sm text-dash-mute">
-            No projects with a live URL yet. Add one in the Projects tab to monitor it.
+          <div className="empty-state">
+            <svg viewBox="0 0 16 16" className="empty-state-icon" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M1 8h3l2-4 3 8 2-4h4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <div className="empty-state-title">No uptime monitors</div>
+            <div className="empty-state-subtitle">Add a live URL to a project to start monitoring</div>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -67,14 +89,14 @@ export default function UptimeView({ onOpenProject }: Props) {
                 <div
                   key={s.projectId}
                   onClick={() => onOpenProject(s.projectId)}
-                  className="card cursor-pointer p-4 transition hover:border-dash-indigo/60"
+                  className={`card cursor-pointer p-4 ${s.latestOk === false ? 'card-status-err' : s.latestOk === true ? 'card-status-ok' : ''}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`h-2 w-2 rounded-full ${
+                        className={`h-2.5 w-2.5 rounded-full ${
                           s.latestOk === true
-                            ? 'bg-dash-ok'
+                            ? 'bg-dash-ok animate-pulse'
                             : s.latestOk === false
                             ? 'bg-dash-err'
                             : 'bg-dash-mute'
@@ -82,7 +104,9 @@ export default function UptimeView({ onOpenProject }: Props) {
                       />
                       <h3 className="text-sm font-semibold text-dash-text">{project.name}</h3>
                     </div>
-                    <span className="text-[11px] text-dash-mute">{s.uptimePct24h}% up 24h</span>
+                    <span className={`text-sm font-bold ${
+                      (s.uptimePct24h ?? 0) >= 99 ? 'text-dash-ok' : (s.uptimePct24h ?? 0) >= 95 ? 'text-dash-warn' : 'text-dash-err'
+                    }`}>{s.uptimePct24h}%</span>
                   </div>
                   <p className="mt-1 truncate text-[11px] text-dash-indigoBright">{s.url ?? '—'}</p>
                   <Sparkline
@@ -90,7 +114,9 @@ export default function UptimeView({ onOpenProject }: Props) {
                     fails={s.samples.map((x) => x.ok === 0)}
                   />
                   <div className="mt-1 flex items-center justify-between text-[11px] text-dash-mute">
-                    <span>avg {s.avgLatencyMs ?? '—'}ms</span>
+                    <span className={`font-mono ${
+                      (s.avgLatencyMs ?? 0) < 200 ? 'text-dash-ok' : (s.avgLatencyMs ?? 0) < 500 ? 'text-dash-warn' : 'text-dash-err'
+                    }`}>{s.avgLatencyMs ?? '—'}ms</span>
                     <span>
                       {s.latestCheckedAt ? new Date(s.latestCheckedAt).toLocaleTimeString() : '—'}
                     </span>
