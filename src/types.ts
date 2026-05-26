@@ -136,7 +136,7 @@ export interface AppSettings {
 
 export interface Toast {
   id: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
   title: string;
   body?: string;
 }
@@ -589,7 +589,7 @@ declare global {
           details?: string;
         }>;
         onUpdate: (cb: (payload: { items: DeployItem[]; errors: { projectId: string; error: string }[]; manual: boolean }) => void) => () => void;
-        onToast: (cb: (payload: { type: 'success' | 'error'; title: string; projectId: string }) => void) => () => void;
+        onToast: (cb: (payload: { type: 'success' | 'error' | 'info' | 'warning'; title: string; projectId: string }) => void) => () => void;
       };
       uptime: {
         all: () => Promise<UptimeSummary[]>;
