@@ -32,6 +32,16 @@ const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
 const TemplateUpdates = lazy(() => import('./components/TemplateUpdates'));
 const TemplateTest = lazy(() => import('./components/TemplateTest'));
 const TemplateAnalytics = lazy(() => import('./components/TemplateAnalytics'));
+const EnvManager = lazy(() => import('./components/EnvManager'));
+const TerminalView = lazy(() => import('./components/TerminalView'));
+const PerformanceView = lazy(() => import('./components/PerformanceView'));
+const IncidentsView = lazy(() => import('./components/IncidentsView'));
+const AnalyticsView = lazy(() => import('./components/AnalyticsView'));
+const TeamView = lazy(() => import('./components/TeamView'));
+const PipelineView = lazy(() => import('./components/PipelineView'));
+const PluginsView = lazy(() => import('./components/PluginsView'));
+const MobileCompanion = lazy(() => import('./components/MobileCompanion'));
+const AIAssistant = lazy(() => import('./components/AIAssistant'));
 
 function LazyFallback() {
   return (
@@ -44,7 +54,7 @@ function LazyFallback() {
   );
 }
 
-type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
+type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings' | 'envmanager' | 'terminal' | 'performance' | 'incidents' | 'analytics' | 'team' | 'pipelines' | 'plugins' | 'mobile' | 'aiassistant';
 type DetailTab = 'overview' | 'logs' | 'env' | 'time' | 'deps' | 'heatmap' | 'screenshots' | 'release';
 
 export default function App() {
@@ -181,6 +191,16 @@ export default function App() {
                 </div>
               )}
               {tab === 'snippets' && <SnippetLibrary />}
+              {tab === 'envmanager' && <EnvManager />}
+              {tab === 'terminal' && <TerminalView />}
+              {tab === 'performance' && <PerformanceView />}
+              {tab === 'incidents' && <IncidentsView />}
+              {tab === 'analytics' && <AnalyticsView />}
+              {tab === 'team' && <TeamView />}
+              {tab === 'pipelines' && <PipelineView />}
+              {tab === 'plugins' && <PluginsView />}
+              {tab === 'mobile' && <MobileCompanion />}
+              {tab === 'aiassistant' && <AIAssistant />}
               {tab === 'chat' && <ChatView />}
               {tab === 'settings' && <SettingsView />}
             </Suspense>

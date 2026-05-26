@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
+type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings' | 'envmanager' | 'terminal' | 'performance' | 'incidents' | 'analytics' | 'team' | 'pipelines' | 'plugins' | 'mobile' | 'aiassistant';
 
 interface Props {
   tab: Tab;
@@ -36,6 +36,10 @@ const DEFAULT_SECTIONS: SidebarSection[] = [
       { id: 'ports', label: 'Ports', icon: <PortIcon /> },
       { id: 'dbhealth', label: 'DB Health', icon: <DbIcon /> },
       { id: 'metrics', label: 'Metrics', icon: <ChartIcon /> },
+      { id: 'envmanager', label: 'Env Manager', icon: <EnvIcon /> },
+      { id: 'performance', label: 'Performance', icon: <GaugeIcon /> },
+      { id: 'incidents', label: 'Incidents', icon: <AlertIcon /> },
+      { id: 'analytics', label: 'Analytics', icon: <AnalyticsIcon /> },
     ],
   },
   {
@@ -44,16 +48,22 @@ const DEFAULT_SECTIONS: SidebarSection[] = [
       { id: 'build', label: 'Build Code', icon: <BuildIcon /> },
       { id: 'zerolive', label: 'Zero to Live', icon: <RocketIcon /> },
       { id: 'aigen', label: 'AI Code Gen', icon: <SparkleIcon /> },
+      { id: 'pipelines', label: 'Pipelines', icon: <PipelineIcon /> },
+      { id: 'aiassistant', label: 'AI Assistant', icon: <BrainIcon /> },
       { id: 'templates', label: 'Templates', icon: <LayersIcon /> },
       { id: 'snippets', label: 'Snippets', icon: <SnippetIcon /> },
+      { id: 'terminal', label: 'Terminal', icon: <TerminalIcon /> },
     ],
   },
   {
     label: 'OTHER',
     items: [
       { id: 'automations', label: 'Automations', icon: <BoltIcon /> },
+      { id: 'team', label: 'Team', icon: <TeamIcon /> },
       { id: 'chat', label: 'Chat', icon: <ChatIcon /> },
+      { id: 'mobile', label: 'Mobile', icon: <MobileIcon /> },
       { id: 'settings', label: 'Settings', icon: <GearIcon /> },
+      { id: 'plugins', label: 'Plugins', icon: <PluginIcon /> },
     ],
   },
 ];
@@ -435,6 +445,112 @@ function SnippetIcon() {
   return (
     <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M5 4l-3 4 3 4M11 4l3 4-3 4M9 2l-2 12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function EnvIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="2" width="12" height="12" rx="2" />
+      <path d="M5 6h6M5 8h4M5 10h5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TerminalIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" />
+      <path d="M4 7l2.5 2L4 11" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.5 11H12" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GaugeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M2 10a6 6 0 1112 0" strokeLinecap="round" />
+      <path d="M8 10l2-4" strokeLinecap="round" />
+      <circle cx="8" cy="10" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M8 1L1 14h14L8 1z" strokeLinejoin="round" />
+      <path d="M8 6v3.5" strokeLinecap="round" />
+      <circle cx="8" cy="11.5" r="0.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function AnalyticsIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M2 13h12" strokeLinecap="round" />
+      <path d="M3 10l3-3 2 2 5-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 4h3v3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TeamIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="8" cy="5" r="2.5" />
+      <path d="M3 14c0-2.5 2.2-4 5-4s5 1.5 5 4" strokeLinecap="round" />
+      <circle cx="12.5" cy="4.5" r="1.5" />
+      <path d="M14 10.5c0-1-.8-1.8-1.5-2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PipelineIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="3" cy="8" r="1.5" />
+      <circle cx="8" cy="8" r="1.5" />
+      <circle cx="13" cy="8" r="1.5" />
+      <path d="M4.5 8h2M9.5 8h2" strokeLinecap="round" />
+      <path d="M2 4h12M2 12h12" strokeLinecap="round" opacity="0.3" />
+    </svg>
+  );
+}
+
+function PluginIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="6" width="10" height="8" rx="1.5" />
+      <path d="M6 6V4.5a2 2 0 014 0V6" />
+      <circle cx="8" cy="10.5" r="1.5" />
+      <path d="M8 12v1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MobileIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="4" y="1.5" width="8" height="13" rx="1.5" />
+      <path d="M7 12.5h2" strokeLinecap="round" />
+      <path d="M4 3.5h8M4 11h8" />
+    </svg>
+  );
+}
+
+function BrainIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M8 14V8" strokeLinecap="round" />
+      <path d="M5.5 3.5a2.5 2.5 0 015 0" />
+      <path d="M4 6.5a2 2 0 00-.5 3.5c.5.5 1.5.5 2.5.5" strokeLinecap="round" />
+      <path d="M12 6.5a2 2 0 01.5 3.5c-.5.5-1.5.5-2.5.5" strokeLinecap="round" />
+      <path d="M5 5c-.8 0-1.5.5-1.8 1.2" strokeLinecap="round" />
+      <path d="M11 5c.8 0 1.5.5 1.8 1.2" strokeLinecap="round" />
     </svg>
   );
 }
