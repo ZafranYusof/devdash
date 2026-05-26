@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import type { ProjectConfig, DeployItem, UptimeSummary } from '../types';
 import { useActivityLog } from './ActivityLog';
+import WidgetPicker, { useDashboardWidgets } from './WidgetPicker';
+import AIChangelog from './AIChangelog';
 
 export default function DashboardView() {
   const [projects, setProjects] = useState<ProjectConfig[]>([]);
   const [deploys, setDeploys] = useState<DeployItem[]>([]);
   const [uptime, setUptime] = useState<UptimeSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [widgetPickerOpen, setWidgetPickerOpen] = useState(false);
   const activityEntries = useActivityLog();
+  const { widgets, enabledWidgets, toggleWidget, moveWidget, resetWidgets } = useDashboardWidgets();
 
   useEffect(() => {
     void (async () => {
@@ -52,6 +56,14 @@ export default function DashboardView() {
 
   return (
     <div className="flex flex-col gap-4 overflow-y-auto">
+      {/* Header with widget picker */}
+      <div className="flex items-center justify-between">
+        <div />
+        <button onClick={() => setWidgetPickerOpen(true)} className="btn-soft">
+          ⚙ Widgets
+        </button>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-3">
         <KPICard label="Total Projects" value={totalProjects} icon={<FolderIcon />} color="#0070F3" />
@@ -109,13 +121,30 @@ export default function DashboardView() {
           </div>
         </div>
       </div>
+
+      {/* AI Changelog */}
+      {deploys.length > 0 && (
+        <div className="card p-4">
+          <AIChangelog projectName={projects[0]?.name || 'Project'} deploys={deploys.map((d) => ({ commitMessage: d.commitMessage, createdAt: d.createdAt, status: d.status }))} />
+        </div>
+      )}
+
+      {/* Widget Picker Modal */}
+      <WidgetPicker
+        open={widgetPickerOpen}
+        onClose={() => setWidgetPickerOpen(false)}
+        widgets={widgets}
+        onToggle={toggleWidget}
+        onMove={moveWidget}
+        onReset={resetWidgets}
+      />
     </div>
   );
 }
 
 function KPICard({ label, value, icon, color }: { label: string; value: string | number; icon: JSX.Element; color: string }) {
   return (
-    <div className="card p-3 flex items-center gap-3">
+    <div className="card card-interactive p-3 flex items-center gap-3">
       <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: `${color}15` }}>
         <span style={{ color }}>{icon}</span>
       </div>
@@ -144,7 +173,7 @@ function QuickAction({ label, icon, onClick }: { label: string; icon: string; on
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 rounded-md border border-[#222] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#888] hover:border-[#333] hover:text-white hover:bg-white/[0.03] transition-all"
+      className="card-interactive flex items-center gap-2 rounded-md border border-[#222] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#888] hover:border-[#333] hover:text-white hover:bg-white/[0.03] transition-all"
     >
       <span>{icon}</span>
       <span>{label}</span>

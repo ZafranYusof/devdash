@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { usePinnedTabs, SidebarContextMenu } from './PinnedTabs';
 
 type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings' | 'envmanager' | 'terminal' | 'performance' | 'incidents' | 'analytics' | 'team' | 'pipelines' | 'plugins' | 'mobile' | 'aiassistant';
 
@@ -120,12 +121,18 @@ function reorderSections(customOrder: Tab[] | null): SidebarSection[] {
   return result;
 }
 
+const COLLAPSED_KEY = 'devdash-sidebar-collapsed';
+
 export default function Sidebar({ tab, onChange }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(COLLAPSED_KEY) === 'true'; } catch { return false; }
+  });
   const [customOrder, setCustomOrder] = useState<Tab[] | null>(loadOrder);
   const [dragItem, setDragItem] = useState<Tab | null>(null);
   const [dropTarget, setDropTarget] = useState<{ section: number; index: number } | null>(null);
   const dragRef = useRef<{ startY: number; itemId: Tab } | null>(null);
+  const { pinned, isPinned, togglePin } = usePinnedTabs();
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: Tab } | null>(null);
 
   const sections = reorderSections(customOrder);
 
@@ -189,6 +196,21 @@ export default function Sidebar({ tab, onChange }: Props) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const handleCollapse = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem(COLLAPSED_KEY, String(next));
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, itemId: Tab) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, tabId: itemId });
+  };
+
+  // Get pinned items
+  const allItems = getAllItems();
+  const pinnedItems = allItems.filter((it) => pinned.includes(it.id));
+
   return (
     <aside className={`no-drag flex flex-col border-r border-[#222] bg-[#0A0A0A] py-3 transition-all duration-200 ${collapsed ? 'w-14' : 'w-52'}`}>
       {/* Header */}
@@ -197,7 +219,7 @@ export default function Sidebar({ tab, onChange }: Props) {
           <span className="text-sm font-semibold text-white tracking-tight">DevDash</span>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={handleCollapse}
           className="btn-icon"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
@@ -209,6 +231,38 @@ export default function Sidebar({ tab, onChange }: Props) {
 
       {/* Navigation */}
       <nav className="flex flex-col flex-1 overflow-y-auto px-1.5">
+        {/* Pinned section */}
+        {pinnedItems.length > 0 && (
+          <div>
+            {!collapsed && <div className="sidebar-section-label">PINNED</div>}
+            <div className="flex flex-col gap-0.5">
+              {pinnedItems.map((it) => {
+                const active = it.id === tab;
+                return (
+                  <button
+                    key={`pinned-${it.id}`}
+                    onClick={() => onChange(it.id)}
+                    onContextMenu={(e) => handleContextMenu(e, it.id)}
+                    title={collapsed ? it.label : undefined}
+                    className={`sidebar-item ${active ? 'active' : ''} ${collapsed ? 'justify-center px-2' : ''}`}
+                  >
+                    <span className={`sidebar-icon flex h-4 w-4 shrink-0 items-center justify-center ${active ? 'text-white' : 'text-[#666]'}`}>
+                      {it.icon}
+                    </span>
+                    {!collapsed && (
+                      <span className="truncate flex items-center gap-1">
+                        {it.label}
+                        <span className="text-[9px] text-[#555]">📌</span>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="h-px bg-[#1a1a1a] mx-2 my-1.5" />
+          </div>
+        )}
+
         {sections.map((section, sIdx) => (
           <div key={section.label}>
             {sIdx > 0 && <div className="h-px bg-[#1a1a1a] mx-2 my-1.5" />}
@@ -229,6 +283,7 @@ export default function Sidebar({ tab, onChange }: Props) {
                     onMouseDown={(e) => {
                       if (e.button === 0 && !collapsed) handleDragStart(e, it.id);
                     }}
+                    onContextMenu={(e) => handleContextMenu(e, it.id)}
                     title={collapsed ? it.label : undefined}
                     className={`sidebar-item ${active ? 'active' : ''} ${collapsed ? 'justify-center px-2' : ''} ${isDragging ? 'sidebar-item-dragging' : ''}`}
                   >
@@ -243,6 +298,19 @@ export default function Sidebar({ tab, onChange }: Props) {
           </div>
         ))}
       </nav>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <SidebarContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          tabId={contextMenu.tabId}
+          isPinned={isPinned(contextMenu.tabId)}
+          onPin={() => { togglePin(contextMenu.tabId); setContextMenu(null); }}
+          onUnpin={() => { togglePin(contextMenu.tabId); setContextMenu(null); }}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
 
       {/* Footer */}
       <div className="h-px bg-[#222] mx-2 mt-1.5 mb-2" />

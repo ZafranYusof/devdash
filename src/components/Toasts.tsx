@@ -11,8 +11,43 @@ export function showError(title: string, err: unknown) {
   window.dispatchEvent(event);
 }
 
+const MAX_VISIBLE = 3;
+
 export default function Toasts() {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [queue, setQueue] = useState<Toast[]>([]);
+
+  const addToast = (toast: Toast) => {
+    setToasts((prev) => {
+      if (prev.length >= MAX_VISIBLE) {
+        setQueue((q) => [...q, toast]);
+        return prev;
+      }
+      return [...prev, toast];
+    });
+    setTimeout(() => {
+      removeToast(toast.id);
+    }, 5000);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => {
+      const next = prev.filter((t) => t.id !== id);
+      // Promote from queue
+      if (next.length < MAX_VISIBLE) {
+        setQueue((q) => {
+          if (q.length === 0) return q;
+          const [promoted, ...rest] = q;
+          setTimeout(() => {
+            removeToast(promoted.id);
+          }, 5000);
+          setToasts((curr) => [...curr.filter((t) => t.id !== id), promoted]);
+          return rest;
+        });
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const off = window.devdash.deploys.onToast((payload) => {
@@ -22,11 +57,7 @@ export default function Toasts() {
         type: payload.type,
         title: payload.title,
       };
-      setToasts((prev) => [...prev, toast]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
-      // Push to notification center and activity log
+      addToast(toast);
       pushNotification({ type: payload.type, title: payload.title });
       logActivity('deploy-toast', `${payload.title} (${payload.projectId})`);
     });
@@ -39,10 +70,7 @@ export default function Toasts() {
       const detail = (e as CustomEvent).detail as { type: Toast['type']; title: string; body?: string };
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       const toast: Toast = { id, type: detail.type, title: detail.title, body: detail.body };
-      setToasts((prev) => [...prev, toast]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
+      addToast(toast);
       pushNotification({ type: detail.type, title: detail.title, body: detail.body });
       logActivity('toast', detail.title);
     };
@@ -51,13 +79,13 @@ export default function Toasts() {
   }, []);
 
   const dismiss = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    removeToast(id);
   };
 
   if (toasts.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-50 toast-stack">
       {toasts.map((t) => {
         const borderColor =
           t.type === 'error'

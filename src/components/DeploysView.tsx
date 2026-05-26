@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { DeployItem, ProjectConfig } from '../types';
+import { AIDeploySummary } from './WhyDidThisFail';
+import WhyDidThisFail from './WhyDidThisFail';
+import DeployLogStream from './DeployLogStream';
 
 type Filter = 'all' | 'ready' | 'error' | 'building';
 
@@ -244,6 +247,7 @@ export default function DeploysView() {
 }
 
 function DeployRow({ deploy, onRedeploy }: { deploy: DeployItem; onRedeploy: () => void }) {
+  const [logOpen, setLogOpen] = useState(false);
   const open = (url?: string) => {
     if (!url) return;
     void window.devdash.shell.openExternal(url);
@@ -280,7 +284,24 @@ function DeployRow({ deploy, onRedeploy }: { deploy: DeployItem; onRedeploy: () 
           </div>
         </div>
       </div>
-      <div className="flex shrink-0 gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
+        {deploy.status === 'error' && (
+          <AIDeploySummary projectName={deploy.projectName} />
+        )}
+        {deploy.status === 'error' && (
+          <WhyDidThisFail
+            deployId={deploy.id}
+            projectName={deploy.projectName}
+            onRetry={onRedeploy}
+          />
+        )}
+        <button
+          onClick={() => setLogOpen(true)}
+          className="rounded-md border border-dash-line bg-dash-panel/60 px-2.5 py-1 text-[11px] text-dash-text hover:border-dash-indigo/60"
+          title="View deploy log"
+        >
+          Log
+        </button>
         <button
           onClick={() => {
             if (confirm(`Trigger a new deploy for ${deploy.projectName}?`)) onRedeploy();
@@ -307,6 +328,12 @@ function DeployRow({ deploy, onRedeploy }: { deploy: DeployItem; onRedeploy: () 
           </button>
         )}
       </div>
+      <DeployLogStream
+        open={logOpen}
+        onClose={() => setLogOpen(false)}
+        deployId={deploy.id}
+        projectName={deploy.projectName}
+      />
     </li>
   );
 }

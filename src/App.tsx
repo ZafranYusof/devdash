@@ -19,7 +19,12 @@ import OfflineIndicator from './components/OfflineIndicator';
 import ActivityLog from './components/ActivityLog';
 import DashboardView from './components/DashboardView';
 import OnboardingHints from './components/OnboardingHints';
+import Breadcrumbs from './components/Breadcrumbs';
+import KeyboardNavIndicator, { useKeyboardNav } from './components/KeyboardNav';
 import type { ProjectConfig } from './types';
+
+const SplitView = lazy(() => import('./components/SplitView'));
+const MacroRecorder = lazy(() => import('./components/MacroRecorder'));
 
 // Lazy-loaded heavy components (Improvement #1)
 const ChatView = lazy(() => import('./components/ChatView'));
@@ -66,6 +71,12 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [activityLogOpen, setActivityLogOpen] = useState(false);
   const [tabFade, setTabFade] = useState(true);
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitLeftTab, setSplitLeftTab] = useState<Tab>('dashboard');
+  const [splitRightTab, setSplitRightTab] = useState<Tab>('deploys');
+  const [macroOpen, setMacroOpen] = useState(false);
+  const [subView, setSubView] = useState<string | undefined>(undefined);
+  const { enabled: kbNavEnabled } = useKeyboardNav();
 
   const loadProjects = async () => {
     setProjects(await window.devdash.projects.list());
@@ -144,10 +155,23 @@ export default function App() {
   // Tab fade transition (Improvement #16)
   const handleTabChange = useCallback((newTab: Tab) => {
     setTabFade(false);
+    setSubView(undefined);
     setTimeout(() => {
       setTab(newTab);
       setTabFade(true);
     }, 100);
+  }, []);
+
+  // Split view toggle (Ctrl+\)
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
+        e.preventDefault();
+        setSplitMode((p) => !p);
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, []);
 
   const openProject = async (id: string, detailTab: DetailTab = 'overview') => {
@@ -167,7 +191,11 @@ export default function App() {
       <div className="flex min-h-0 flex-1">
         <Sidebar tab={tab} onChange={handleTabChange} />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <main className={`no-drag flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-4 ${tabFade ? 'tab-fade-active' : 'tab-fade-enter'}`}>
+          {/* Breadcrumbs */}
+          <div className="px-5 pt-1">
+            <Breadcrumbs tab={tab} subView={subView} onNavigate={handleTabChange} />
+          </div>
+          <main className={`no-drag flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-4 ${tabFade ? 'page-transition-active' : 'page-transition-enter'}`}>
             <OfflineIndicator />
             <Suspense fallback={<LazyFallback />}>
               {tab === 'dashboard' && <DashboardView />}
@@ -239,6 +267,23 @@ export default function App() {
         />
       )}
       <OnboardingHints />
+      <KeyboardNavIndicator enabled={kbNavEnabled} />
+      {macroOpen && (
+        <Suspense fallback={<LazyFallback />}>
+          <MacroRecorder
+            open={macroOpen}
+            onClose={() => setMacroOpen(false)}
+            onReplay={(steps) => {
+              for (const step of steps) {
+                if (step.type === 'navigate') {
+                  handleTabChange(step.payload as Tab);
+                }
+              }
+              setMacroOpen(false);
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

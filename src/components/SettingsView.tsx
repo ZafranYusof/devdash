@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import type { AppSettings } from '../types';
 import AIProviderSettings from './AIProviderSettings';
 import UpdateChecker from './UpdateChecker';
+import BackupSettings from './BackupSettings';
+import CrossDeviceSync from './CrossDeviceSync';
+import WebhookReceiver from './WebhookReceiver';
+import { useKeyboardNav } from './KeyboardNav';
 
 export default function SettingsView() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -301,6 +305,26 @@ export default function SettingsView() {
       <ConfigBackupSection />
       <QuickBackupSection />
       <SettingsExportImport />
+
+      {/* Backup & Sync (v1.1) */}
+      <section className="card p-4">
+        <BackupSettings />
+      </section>
+
+      <section className="card p-4">
+        <CrossDeviceSync />
+      </section>
+
+      <section className="card p-4">
+        <WebhookReceiver />
+      </section>
+
+      {/* CLI Companion (v1.1) */}
+      <CLICompanionSection />
+
+      {/* Keyboard Navigation (v1.1) */}
+      <KeyboardNavSection />
+
       <UpdateChecker />
 
       <section className="card p-4">
@@ -705,6 +729,82 @@ function SettingsExportImport() {
         >
           {msg.text}
         </div>
+      )}
+    </section>
+  );
+}
+
+function CLICompanionSection() {
+  const commands = [
+    { cmd: 'devdash status', desc: 'Show all project statuses' },
+    { cmd: 'devdash deploy <project>', desc: 'Trigger deploy for a project' },
+    { cmd: 'devdash uptime', desc: 'Show uptime summary' },
+    { cmd: 'devdash logs <project>', desc: 'Tail project logs' },
+    { cmd: 'devdash env <project>', desc: 'Show env variables' },
+  ];
+
+  const copyInstall = () => {
+    navigator.clipboard.writeText('npm install -g devdash-cli');
+  };
+
+  return (
+    <section className="card p-4">
+      <h2 className="mb-1 text-sm font-semibold text-dash-text">CLI Companion</h2>
+      <p className="mb-3 text-[11px] text-dash-mute">
+        Use DevDash from your terminal. Available commands:
+      </p>
+      <div className="flex flex-col gap-1 mb-3">
+        {commands.map((c) => (
+          <div key={c.cmd} className="flex items-center gap-3 py-1 border-b border-[#1a1a1a] last:border-0">
+            <code className="text-[11px] font-mono text-[#0070F3] w-48 shrink-0">{c.cmd}</code>
+            <span className="text-[11px] text-[#888]">{c.desc}</span>
+          </div>
+        ))}
+      </div>
+      <button onClick={copyInstall} className="btn-soft">
+        Copy Install Command
+      </button>
+      <p className="mt-2 text-[10px] text-[#444] italic">
+        Note: CLI requires electron/ changes for full functionality. This is a documentation preview.
+      </p>
+    </section>
+  );
+}
+
+function KeyboardNavSection() {
+  const { enabled, toggle } = useKeyboardNav();
+
+  const bindings = [
+    { key: 'j / k', desc: 'Move up/down in lists' },
+    { key: 'Enter', desc: 'Select/open item' },
+    { key: 'h / l', desc: 'Collapse/expand or navigate' },
+    { key: 'g g', desc: 'Go to top' },
+    { key: 'G', desc: 'Go to bottom' },
+    { key: '/', desc: 'Focus search' },
+    { key: 'q', desc: 'Close panel/modal' },
+  ];
+
+  return (
+    <section className="card p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-dash-text">Keyboard Navigation (Vim)</h2>
+        <button
+          onClick={toggle}
+          className={`relative w-9 h-5 rounded-full transition-colors ${enabled ? 'bg-[#0070F3]' : 'bg-[#333]'}`}
+        >
+          <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${enabled ? 'left-[18px]' : 'left-0.5'}`} />
+        </button>
+      </div>
+      <div className="flex flex-col gap-1">
+        {bindings.map((b) => (
+          <div key={b.key} className="flex items-center gap-3 py-0.5">
+            <kbd className="kbd w-16 text-center">{b.key}</kbd>
+            <span className="text-[11px] text-[#888]">{b.desc}</span>
+          </div>
+        ))}
+      </div>
+      {enabled && (
+        <p className="mt-2 text-[10px] text-[#0070F3]">VIM mode active - indicator shown in bottom-right corner</p>
       )}
     </section>
   );
