@@ -1,58 +1,183 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
-type Tab = 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
+type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
 
 interface Props {
   tab: Tab;
   onChange: (tab: Tab) => void;
 }
 
+interface NavItem {
+  id: Tab;
+  label: string;
+  icon: JSX.Element;
+}
+
 interface SidebarSection {
   label: string;
-  items: { id: Tab; label: string; icon: JSX.Element }[];
+  items: NavItem[];
+}
+
+const DEFAULT_SECTIONS: SidebarSection[] = [
+  {
+    label: 'MAIN',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: <DashIcon /> },
+      { id: 'projects', label: 'Projects', icon: <FolderIcon /> },
+      { id: 'deploys', label: 'Deploys', icon: <RadarIcon /> },
+      { id: 'uptime', label: 'Uptime', icon: <PulseIcon /> },
+    ],
+  },
+  {
+    label: 'MONITORING',
+    items: [
+      { id: 'time', label: 'Time', icon: <ClockIcon /> },
+      { id: 'deps', label: 'Deps', icon: <BoxIcon /> },
+      { id: 'ports', label: 'Ports', icon: <PortIcon /> },
+      { id: 'dbhealth', label: 'DB Health', icon: <DbIcon /> },
+      { id: 'metrics', label: 'Metrics', icon: <ChartIcon /> },
+    ],
+  },
+  {
+    label: 'BUILD',
+    items: [
+      { id: 'build', label: 'Build Code', icon: <BuildIcon /> },
+      { id: 'zerolive', label: 'Zero to Live', icon: <RocketIcon /> },
+      { id: 'aigen', label: 'AI Code Gen', icon: <SparkleIcon /> },
+      { id: 'templates', label: 'Templates', icon: <LayersIcon /> },
+      { id: 'snippets', label: 'Snippets', icon: <SnippetIcon /> },
+    ],
+  },
+  {
+    label: 'OTHER',
+    items: [
+      { id: 'automations', label: 'Automations', icon: <BoltIcon /> },
+      { id: 'chat', label: 'Chat', icon: <ChatIcon /> },
+      { id: 'settings', label: 'Settings', icon: <GearIcon /> },
+    ],
+  },
+];
+
+const STORAGE_KEY = 'devdash-sidebar-order';
+
+function loadOrder(): Tab[] | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveOrder(order: Tab[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+  } catch { /* ignore */ }
+}
+
+function getAllItems(): NavItem[] {
+  return DEFAULT_SECTIONS.flatMap((s) => s.items);
+}
+
+function reorderSections(customOrder: Tab[] | null): SidebarSection[] {
+  if (!customOrder) return DEFAULT_SECTIONS;
+  const allItems = getAllItems();
+  const itemMap = new Map(allItems.map((it) => [it.id, it]));
+  // Rebuild sections preserving section structure but reordering items within
+  // For simplicity, flatten all items and reorder, then re-group into original sections
+  const orderedItems: NavItem[] = [];
+  for (const id of customOrder) {
+    const item = itemMap.get(id);
+    if (item) orderedItems.push(item);
+  }
+  // Add any missing items at the end
+  for (const item of allItems) {
+    if (!customOrder.includes(item.id)) orderedItems.push(item);
+  }
+  // Re-group into sections based on original section membership
+  const sectionMap = new Map<string, Set<Tab>>();
+  for (const s of DEFAULT_SECTIONS) {
+    sectionMap.set(s.label, new Set(s.items.map((i) => i.id)));
+  }
+  const result: SidebarSection[] = DEFAULT_SECTIONS.map((s) => ({ label: s.label, items: [] }));
+  for (const item of orderedItems) {
+    for (let i = 0; i < DEFAULT_SECTIONS.length; i++) {
+      if (sectionMap.get(DEFAULT_SECTIONS[i].label)?.has(item.id)) {
+        result[i].items.push(item);
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 export default function Sidebar({ tab, onChange }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+  const [customOrder, setCustomOrder] = useState<Tab[] | null>(loadOrder);
+  const [dragItem, setDragItem] = useState<Tab | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ section: number; index: number } | null>(null);
+  const dragRef = useRef<{ startY: number; itemId: Tab } | null>(null);
 
-  const sections: SidebarSection[] = [
-    {
-      label: 'MAIN',
-      items: [
-        { id: 'projects', label: 'Projects', icon: <FolderIcon /> },
-        { id: 'deploys', label: 'Deploys', icon: <RadarIcon /> },
-        { id: 'uptime', label: 'Uptime', icon: <PulseIcon /> },
-      ],
-    },
-    {
-      label: 'MONITORING',
-      items: [
-        { id: 'time', label: 'Time', icon: <ClockIcon /> },
-        { id: 'deps', label: 'Deps', icon: <BoxIcon /> },
-        { id: 'ports', label: 'Ports', icon: <PortIcon /> },
-        { id: 'dbhealth', label: 'DB Health', icon: <DbIcon /> },
-        { id: 'metrics', label: 'Metrics', icon: <ChartIcon /> },
-      ],
-    },
-    {
-      label: 'BUILD',
-      items: [
-        { id: 'build', label: 'Build Code', icon: <BuildIcon /> },
-        { id: 'zerolive', label: 'Zero to Live', icon: <RocketIcon /> },
-        { id: 'aigen', label: 'AI Code Gen', icon: <SparkleIcon /> },
-        { id: 'templates', label: 'Templates', icon: <LayersIcon /> },
-        { id: 'snippets', label: 'Snippets', icon: <SnippetIcon /> },
-      ],
-    },
-    {
-      label: 'OTHER',
-      items: [
-        { id: 'automations', label: 'Automations', icon: <BoltIcon /> },
-        { id: 'chat', label: 'Chat', icon: <ChatIcon /> },
-        { id: 'settings', label: 'Settings', icon: <GearIcon /> },
-      ],
-    },
-  ];
+  const sections = reorderSections(customOrder);
+
+  const handleDragStart = useCallback((e: React.MouseEvent, itemId: Tab) => {
+    e.preventDefault();
+    dragRef.current = { startY: e.clientY, itemId };
+    setDragItem(itemId);
+
+    const handleMove = (ev: MouseEvent) => {
+      // Find drop target based on mouse position
+      const elements = document.querySelectorAll('[data-sidebar-item]');
+      let closest: { section: number; index: number } | null = null;
+      let closestDist = Infinity;
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const dist = Math.abs(ev.clientY - midY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          const s = parseInt(el.getAttribute('data-section') || '0');
+          const i = parseInt(el.getAttribute('data-index') || '0');
+          closest = { section: s, index: ev.clientY > midY ? i + 1 : i };
+        }
+      });
+      setDropTarget(closest);
+    };
+
+    const handleUp = () => {
+      if (dragRef.current && dropTarget !== null) {
+        // Apply reorder
+        const allItems = sections.flatMap((s) => s.items.map((i) => i.id));
+        const fromIdx = allItems.indexOf(dragRef.current.itemId);
+        if (fromIdx >= 0) {
+          const newOrder = [...allItems];
+          newOrder.splice(fromIdx, 1);
+          // Calculate flat target index
+          let flatTarget = 0;
+          for (let s = 0; s < dropTarget.section; s++) {
+            flatTarget += sections[s].items.length;
+          }
+          flatTarget += dropTarget.index;
+          if (flatTarget > fromIdx) flatTarget--;
+          newOrder.splice(Math.max(0, flatTarget), 0, dragRef.current.itemId);
+          setCustomOrder(newOrder);
+          saveOrder(newOrder);
+        }
+      }
+      setDragItem(null);
+      setDropTarget(null);
+      dragRef.current = null;
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  }, [sections, dropTarget]);
+
+  const resetOrder = () => {
+    setCustomOrder(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
   return (
     <aside className={`no-drag flex flex-col border-r border-[#222] bg-[#0A0A0A] py-3 transition-all duration-200 ${collapsed ? 'w-14' : 'w-52'}`}>
@@ -81,14 +206,21 @@ export default function Sidebar({ tab, onChange }: Props) {
               <div className="sidebar-section-label">{section.label}</div>
             )}
             <div className="flex flex-col gap-0.5">
-              {section.items.map((it) => {
+              {section.items.map((it, iIdx) => {
                 const active = it.id === tab;
+                const isDragging = dragItem === it.id;
                 return (
                   <button
                     key={it.id}
+                    data-sidebar-item
+                    data-section={sIdx}
+                    data-index={iIdx}
                     onClick={() => onChange(it.id)}
+                    onMouseDown={(e) => {
+                      if (e.button === 0 && !collapsed) handleDragStart(e, it.id);
+                    }}
                     title={collapsed ? it.label : undefined}
-                    className={`sidebar-item ${active ? 'active' : ''} ${collapsed ? 'justify-center px-2' : ''}`}
+                    className={`sidebar-item ${active ? 'active' : ''} ${collapsed ? 'justify-center px-2' : ''} ${isDragging ? 'sidebar-item-dragging' : ''}`}
                   >
                     <span className={`sidebar-icon flex h-4 w-4 shrink-0 items-center justify-center ${active ? 'text-white' : 'text-[#666]'}`}>
                       {it.icon}
@@ -111,11 +243,18 @@ export default function Sidebar({ tab, onChange }: Props) {
               <span>Solo dev companion</span>
               <span className="font-mono text-[#333]">v0.25.1</span>
             </p>
-            <p className="mt-1.5">
-              <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">Ctrl</kbd>
-              <span className="mx-0.5">+</span>
-              <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">K</kbd>
-              <span className="ml-1">palette</span>
+            <p className="mt-1.5 flex items-center justify-between">
+              <span>
+                <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">Ctrl</kbd>
+                <span className="mx-0.5">+</span>
+                <kbd className="rounded border border-[#333] bg-[#111] px-1 py-0.5 font-mono text-[10px] text-[#666]">K</kbd>
+                <span className="ml-1">palette</span>
+              </span>
+              {customOrder && (
+                <button onClick={resetOrder} className="text-[9px] text-[#555] hover:text-white transition-colors" title="Reset sidebar order">
+                  ↺
+                </button>
+              )}
             </p>
           </div>
         ) : (
@@ -123,6 +262,17 @@ export default function Sidebar({ tab, onChange }: Props) {
         )}
       </div>
     </aside>
+  );
+}
+
+function DashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="2" width="5" height="5" rx="1" />
+      <rect x="9" y="2" width="5" height="3" rx="1" />
+      <rect x="2" y="9" width="5" height="5" rx="1" />
+      <rect x="9" y="7" width="5" height="7" rx="1" />
+    </svg>
   );
 }
 

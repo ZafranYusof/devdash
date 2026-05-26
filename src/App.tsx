@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState, useCallback } from 'react';
 import TitleBar from './components/TitleBar';
 import Sidebar from './components/Sidebar';
 import ProjectsView from './components/ProjectsView';
@@ -8,35 +8,54 @@ import UptimeView from './components/UptimeView';
 import TimeView from './components/TimeView';
 import DepsView from './components/DepsView';
 import PortsView from './components/PortsView';
-import BuildCodeView from './components/BuildCodeView';
-import ProjectDetail from './components/ProjectDetail';
 import CommandPalette from './components/CommandPalette';
-import ChatView from './components/ChatView';
-import AutomationsView from './components/AutomationsView';
-import DbHealthView from './components/DbHealthView';
-import MetricsView from './components/MetricsView';
 import OnboardingWizard from './components/OnboardingWizard';
 import ShortcutsOverlay from './components/ShortcutsOverlay';
 import Toasts from './components/Toasts';
-import AICodeGen from './components/AICodeGen';
-import ZeroToLive from './components/ZeroToLive';
-import TemplateUpdates from './components/TemplateUpdates';
-import TemplateTest from './components/TemplateTest';
-import TemplateAnalytics from './components/TemplateAnalytics';
-import SnippetLibrary from './components/SnippetLibrary';
-import CloudSync from './components/CloudSync';
+import AutomationsView from './components/AutomationsView';
+import DbHealthView from './components/DbHealthView';
+import MetricsView from './components/MetricsView';
+import OfflineIndicator from './components/OfflineIndicator';
+import ActivityLog from './components/ActivityLog';
+import DashboardView from './components/DashboardView';
+import OnboardingHints from './components/OnboardingHints';
 import type { ProjectConfig } from './types';
 
-type Tab = 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
+// Lazy-loaded heavy components (Improvement #1)
+const ChatView = lazy(() => import('./components/ChatView'));
+const BuildCodeView = lazy(() => import('./components/BuildCodeView'));
+const TemplateEditor = lazy(() => import('./components/TemplateEditor'));
+const SnippetLibrary = lazy(() => import('./components/SnippetLibrary'));
+const AICodeGen = lazy(() => import('./components/AICodeGen'));
+const ZeroToLive = lazy(() => import('./components/ZeroToLive'));
+const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
+const TemplateUpdates = lazy(() => import('./components/TemplateUpdates'));
+const TemplateTest = lazy(() => import('./components/TemplateTest'));
+const TemplateAnalytics = lazy(() => import('./components/TemplateAnalytics'));
+
+function LazyFallback() {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#333] border-t-[#0070F3]" />
+        <span className="text-xs text-[#666]">Loading...</span>
+      </div>
+    </div>
+  );
+}
+
+type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
 type DetailTab = 'overview' | 'logs' | 'env' | 'time' | 'deps' | 'heatmap' | 'screenshots' | 'release';
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('projects');
+  const [tab, setTab] = useState<Tab>('dashboard');
   const [projects, setProjects] = useState<ProjectConfig[]>([]);
   const [detail, setDetail] = useState<{ project: ProjectConfig; initialTab?: DetailTab } | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activityLogOpen, setActivityLogOpen] = useState(false);
+  const [tabFade, setTabFade] = useState(true);
 
   const loadProjects = async () => {
     setProjects(await window.devdash.projects.list());
@@ -51,6 +70,16 @@ export default function App() {
     const h = () => setShowOnboarding(true);
     window.addEventListener('devdash:restart-onboarding', h);
     return () => window.removeEventListener('devdash:restart-onboarding', h);
+  }, []);
+
+  // Listen for custom tab switch events (from DashboardView quick actions)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setTab(detail as Tab);
+    };
+    window.addEventListener('devdash:switch-tab', handler);
+    return () => window.removeEventListener('devdash:switch-tab', handler);
   }, []);
 
   // Apply theme from settings
@@ -92,10 +121,24 @@ export default function App() {
           setShortcutsOpen((p) => !p);
         }
       }
+      // Ctrl+` toggle activity log
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault();
+        setActivityLogOpen((p) => !p);
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [paletteOpen]);
+
+  // Tab fade transition (Improvement #16)
+  const handleTabChange = useCallback((newTab: Tab) => {
+    setTabFade(false);
+    setTimeout(() => {
+      setTab(newTab);
+      setTabFade(true);
+    }, 100);
+  }, []);
 
   const openProject = async (id: string, detailTab: DetailTab = 'overview') => {
     const list = await window.devdash.projects.list();
@@ -112,49 +155,58 @@ export default function App() {
         onClose={() => window.devdash.window.close()}
       />
       <div className="flex min-h-0 flex-1">
-        <Sidebar tab={tab} onChange={setTab} />
-        <main className="no-drag flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-4">
-          {tab === 'projects' && <ProjectsView onOpenProject={openProject} />}
-          {tab === 'deploys' && <DeploysView />}
-          {tab === 'uptime' && <UptimeView onOpenProject={(id) => openProject(id, 'overview')} />}
-          {tab === 'time' && <TimeView onOpenProject={(id) => openProject(id, 'time')} />}
-          {tab === 'deps' && <DepsView onOpenProject={(id) => openProject(id, 'deps')} />}
-          {tab === 'automations' && <AutomationsView />}
-          {tab === 'dbhealth' && <DbHealthView />}
-          {tab === 'metrics' && <MetricsView />}
-          {tab === 'ports' && <PortsView onOpenProject={(id) => openProject(id, 'overview')} />}
-          {tab === 'build' && <BuildCodeView onProjectCreated={() => void loadProjects()} />}
-          {tab === 'zerolive' && <ZeroToLive onProjectCreated={() => void loadProjects()} />}
-          {tab === 'aigen' && <AICodeGen />}
-          {tab === 'templates' && (
-            <div className="flex flex-col gap-6 overflow-y-auto">
-              <TemplateUpdates />
-              <TemplateTest />
-              <TemplateAnalytics />
-            </div>
-          )}
-          {tab === 'snippets' && <SnippetLibrary />}
-          {tab === 'chat' && <ChatView />}
-          {tab === 'settings' && <SettingsView />}
-        </main>
+        <Sidebar tab={tab} onChange={handleTabChange} />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <main className={`no-drag flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-4 ${tabFade ? 'tab-fade-active' : 'tab-fade-enter'}`}>
+            <OfflineIndicator />
+            <Suspense fallback={<LazyFallback />}>
+              {tab === 'dashboard' && <DashboardView />}
+              {tab === 'projects' && <ProjectsView onOpenProject={openProject} />}
+              {tab === 'deploys' && <DeploysView />}
+              {tab === 'uptime' && <UptimeView onOpenProject={(id) => openProject(id, 'overview')} />}
+              {tab === 'time' && <TimeView onOpenProject={(id) => openProject(id, 'time')} />}
+              {tab === 'deps' && <DepsView onOpenProject={(id) => openProject(id, 'deps')} />}
+              {tab === 'automations' && <AutomationsView />}
+              {tab === 'dbhealth' && <DbHealthView />}
+              {tab === 'metrics' && <MetricsView />}
+              {tab === 'ports' && <PortsView onOpenProject={(id) => openProject(id, 'overview')} />}
+              {tab === 'build' && <BuildCodeView onProjectCreated={() => void loadProjects()} />}
+              {tab === 'zerolive' && <ZeroToLive onProjectCreated={() => void loadProjects()} />}
+              {tab === 'aigen' && <AICodeGen />}
+              {tab === 'templates' && (
+                <div className="flex flex-col gap-6 overflow-y-auto">
+                  <TemplateUpdates />
+                  <TemplateTest />
+                  <TemplateAnalytics />
+                </div>
+              )}
+              {tab === 'snippets' && <SnippetLibrary />}
+              {tab === 'chat' && <ChatView />}
+              {tab === 'settings' && <SettingsView />}
+            </Suspense>
+          </main>
+          <ActivityLog open={activityLogOpen} onToggle={() => setActivityLogOpen((p) => !p)} />
+        </div>
       </div>
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
         projects={projects}
         onOpenProject={openProject}
-        onSwitchTab={setTab}
+        onSwitchTab={handleTabChange}
       />
       {detail && (
-        <ProjectDetail
-          project={detail.project}
-          initialTab={detail.initialTab}
-          allProjects={projects}
-          onClose={() => {
-            setDetail(null);
-            void loadProjects();
-          }}
-        />
+        <Suspense fallback={<LazyFallback />}>
+          <ProjectDetail
+            project={detail.project}
+            initialTab={detail.initialTab}
+            allProjects={projects}
+            onClose={() => {
+              setDetail(null);
+              void loadProjects();
+            }}
+          />
+        </Suspense>
       )}
       <Toasts />
       <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
@@ -166,6 +218,7 @@ export default function App() {
           }}
         />
       )}
+      <OnboardingHints />
     </div>
   );
 }

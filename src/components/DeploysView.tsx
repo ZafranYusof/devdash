@@ -80,6 +80,21 @@ export default function DeploysView() {
     };
   }, []);
 
+  // Keyboard shortcuts (Improvement #3)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || target?.isContentEditable) return;
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        void refresh();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const refresh = async () => {
     setRefreshing(true);
     try {

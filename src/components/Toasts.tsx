@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { Toast } from '../types';
+import { pushNotification } from './NotificationCenter';
+import { logActivity } from './ActivityLog';
+
+export function showError(title: string, err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  const event = new CustomEvent('devdash:toast', {
+    detail: { type: 'error', title, body: message },
+  });
+  window.dispatchEvent(event);
+}
 
 export default function Toasts() {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -16,8 +26,28 @@ export default function Toasts() {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 5000);
+      // Push to notification center and activity log
+      pushNotification({ type: payload.type, title: payload.title });
+      logActivity('deploy-toast', `${payload.title} (${payload.projectId})`);
     });
     return () => off();
+  }, []);
+
+  // Listen for custom toast events (from showError helper)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { type: Toast['type']; title: string; body?: string };
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const toast: Toast = { id, type: detail.type, title: detail.title, body: detail.body };
+      setToasts((prev) => [...prev, toast]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 5000);
+      pushNotification({ type: detail.type, title: detail.title, body: detail.body });
+      logActivity('toast', detail.title);
+    };
+    window.addEventListener('devdash:toast', handler);
+    return () => window.removeEventListener('devdash:toast', handler);
   }, []);
 
   const dismiss = (id: string) => {
@@ -54,7 +84,15 @@ export default function Toasts() {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
-                <div className="font-medium text-white">{t.title}</div>
+                <div className="flex items-center gap-2">
+                  {t.type === 'error' && (
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 text-[#EE0000]" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <circle cx="8" cy="8" r="6" />
+                      <path d="M8 5v4M8 11v0.5" strokeLinecap="round" />
+                    </svg>
+                  )}
+                  <span className="font-medium text-white">{t.title}</span>
+                </div>
                 {t.body && <div className="mt-0.5 text-[11px] text-[#888]">{t.body}</div>}
               </div>
               <button

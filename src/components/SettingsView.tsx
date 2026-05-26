@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { AppSettings } from '../types';
 import AIProviderSettings from './AIProviderSettings';
+import UpdateChecker from './UpdateChecker';
 
 export default function SettingsView() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -299,6 +300,8 @@ export default function SettingsView() {
 
       <ConfigBackupSection />
       <QuickBackupSection />
+      <SettingsExportImport />
+      <UpdateChecker />
 
       <section className="card p-4">
         <h2 className="mb-3 text-sm font-semibold text-dash-text">About</h2>
@@ -617,5 +620,92 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
         {value}
       </span>
     </div>
+  );
+}
+
+function SettingsExportImport() {
+  const [busy, setBusy] = useState<'export' | 'import' | null>(null);
+  const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const doExport = async () => {
+    setBusy('export');
+    setMsg(null);
+    try {
+      const settings = await window.devdash.settings.get();
+      const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `devdash-settings-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg({ type: 'ok', text: 'Settings exported successfully' });
+    } catch (err) {
+      setMsg({ type: 'err', text: err instanceof Error ? err.message : 'Export failed' });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const doImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy('import');
+    setMsg(null);
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      // Validate basic structure
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new Error('Invalid settings file: expected a JSON object');
+      }
+      await window.devdash.settings.update(parsed);
+      setMsg({ type: 'ok', text: 'Settings imported successfully' });
+      window.dispatchEvent(new Event('devdash:theme-changed'));
+    } catch (err) {
+      setMsg({ type: 'err', text: err instanceof Error ? err.message : 'Import failed' });
+    } finally {
+      setBusy(null);
+      e.target.value = '';
+    }
+  };
+
+  return (
+    <section className="card p-4">
+      <h2 className="mb-1 text-sm font-semibold text-dash-text">Settings Export / Import</h2>
+      <p className="mb-3 text-[11px] text-dash-mute">
+        Export current settings as JSON or import from a previously exported file.
+      </p>
+      <div className="flex gap-2">
+        <button
+          onClick={doExport}
+          disabled={busy !== null}
+          className="btn-primary"
+        >
+          {busy === 'export' ? 'Exporting...' : 'Export as JSON'}
+        </button>
+        <label className="btn-soft cursor-pointer inline-flex items-center">
+          {busy === 'import' ? 'Importing...' : 'Import from JSON'}
+          <input
+            type="file"
+            accept=".json"
+            onChange={doImport}
+            className="hidden"
+            disabled={busy !== null}
+          />
+        </label>
+      </div>
+      {msg && (
+        <div
+          className={`mt-3 rounded-md border px-3 py-2 text-[11px] ${
+            msg.type === 'ok'
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+              : 'border-red-500/30 bg-red-500/10 text-red-400'
+          }`}
+        >
+          {msg.text}
+        </div>
+      )}
+    </section>
   );
 }

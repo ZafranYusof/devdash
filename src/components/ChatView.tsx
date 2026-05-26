@@ -124,6 +124,21 @@ export default function ChatView() {
     };
   }, [currentId]);
 
+  // Keyboard shortcuts (Improvement #3)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || target?.isContentEditable) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        void newChat();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const newChat = async () => {
     const id = `chat_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     await window.devdash.chats.create({

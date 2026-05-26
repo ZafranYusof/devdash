@@ -6,6 +6,7 @@ import NewDeploymentModal from './NewDeploymentModal';
 import QuickCommitModal from './QuickCommitModal';
 import DiffViewerModal from './DiffViewerModal';
 import PRListModal from './PRListModal';
+import Sparkline from './Sparkline';
 
 interface Props {
   onOpenProject: (id: string, tab?: 'overview' | 'logs' | 'env' | 'time' | 'deps' | 'heatmap' | 'screenshots' | 'release') => void;
@@ -27,6 +28,8 @@ export default function ProjectsView({ onOpenProject }: Props) {
   const [quickCommitFor, setQuickCommitFor] = useState<{ id: string; name: string } | null>(null);
   const [diffFor, setDiffFor] = useState<{ id: string; name: string } | null>(null);
   const [prsFor, setPrsFor] = useState<{ id: string; name: string } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [ctrlHeld, setCtrlHeld] = useState(false);
 
   const load = async (fetchRemote = false) => {
     setLoading(true);
@@ -58,6 +61,36 @@ export default function ProjectsView({ onOpenProject }: Props) {
     void load(false);
     const off = window.devdash.devserver.onStatus(() => void load(false));
     return () => off();
+  }, []);
+
+  // Keyboard shortcuts (Improvement #3)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || target?.isContentEditable) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        setShowAdd(true);
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        void handleRefresh();
+      }
+    };
+    // Track ctrl key for multi-select
+    const keyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control') setCtrlHeld(true);
+      handler(e);
+    };
+    const keyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Control') setCtrlHeld(false);
+    };
+    window.addEventListener('keydown', keyDown);
+    window.addEventListener('keyup', keyUp);
+    return () => {
+      window.removeEventListener('keydown', keyDown);
+      window.removeEventListener('keyup', keyUp);
+    };
   }, []);
 
   const handleRefresh = async () => {
@@ -207,7 +240,25 @@ export default function ProjectsView({ onOpenProject }: Props) {
         ) : (
           <div className="grid grid-cols-1 gap-3 pb-4 md:grid-cols-2">
             {filteredStatuses.map((s) => (
-              <ProjectCard
+              <div key={s.project.id} className="relative group">
+                {/* Multi-select checkbox */}
+                <div className={`absolute top-2 left-2 z-10 ${ctrlHeld || selectedIds.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(s.project.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(s.project.id)) next.delete(s.project.id);
+                        else next.add(s.project.id);
+                        return next;
+                      });
+                    }}
+                    className="h-3.5 w-3.5 rounded border-[#333] bg-[#111] accent-[#0070F3] cursor-pointer"
+                  />
+                </div>
+                <ProjectCard
                 key={s.project.id}
                 data={s}
                 uptime={uptime[s.project.id] ?? null}
@@ -222,10 +273,67 @@ export default function ProjectsView({ onOpenProject }: Props) {
                 onOpenPRs={() => setPrsFor({ id: s.project.id, name: s.project.name })}
                 onDeployNew={() => setDeployNew(s.project)}
               />
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Multi-select floating action bar (Improvement #9) */}
+      {selectedIds.size > 0 && (
+        <div className="bulk-action-bar fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 rounded-lg border border-[#222] bg-[#111] px-4 py-2.5 shadow-2xl">
+          <span className="text-xs text-white font-medium">{selectedIds.size} selected</span>
+          <div className="h-4 w-px bg-[#333]" />
+          <button
+            onClick={async () => {
+              for (const id of selectedIds) {
+                await window.devdash.deploys.trigger(id).catch(() => {});
+              }
+              setSelectedIds(new Set());
+            }}
+            className="btn-soft"
+          >
+            Deploy All Selected
+          </button>
+          <button
+            onClick={async () => {
+              for (const id of selectedIds) {
+                await window.devdash.projects.pull(id).catch(() => {});
+              }
+              setSelectedIds(new Set());
+              void load(false);
+            }}
+            className="btn-soft"
+          >
+            Pull All Selected
+          </button>
+          <button
+            onClick={() => {
+              const paths = statuses.filter((s) => selectedIds.has(s.project.id)).map((s) => s.project.path);
+              for (const p of paths) {
+                void window.devdash.projects.openInVSCode(p);
+              }
+              setSelectedIds(new Set());
+            }}
+            className="btn-soft"
+          >
+            Open All in VS Code
+          </button>
+          <div className="h-4 w-px bg-[#333]" />
+          <button
+            onClick={() => setSelectedIds(new Set(filteredStatuses.map((s) => s.project.id)))}
+            className="text-[10px] text-[#888] hover:text-white transition-colors"
+          >
+            Select all
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-[10px] text-[#888] hover:text-white transition-colors"
+          >
+            Deselect
+          </button>
+        </div>
+      )}
 
       {(showAdd || editing) && (
         <AddProjectModal
@@ -323,6 +431,23 @@ function ProjectCard({
   const { project, git, framework, devserver } = data;
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [deployHistory, setDeployHistory] = useState<Array<{ status: 'success' | 'error' | 'unknown' }>>([]);
+
+  // Load deploy history for sparkline (Improvement #15)
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await window.devdash.deploys.list();
+        const projectDeploys = res.items
+          .filter((d) => d.projectId === project.id)
+          .slice(0, 7)
+          .map((d) => ({
+            status: (d.status === 'ready' ? 'success' : d.status === 'error' ? 'error' : 'unknown') as 'success' | 'error' | 'unknown',
+          }));
+        setDeployHistory(projectDeploys);
+      } catch { /* ignore */ }
+    })();
+  }, [project.id]);
 
   const runAction = async (name: string, fn: () => Promise<any>) => {
     setBusy(name);
@@ -462,6 +587,9 @@ function ProjectCard({
             <div className="mt-1 text-[#666]">
               {git.lastCommit.author} · {formatRelative(new Date(git.lastCommit.date).getTime())}
               {bundle && <span> · bundle {humanSize(bundle.sizeBytes)}</span>}
+              {deployHistory.length > 0 && (
+                <span className="ml-2 inline-flex items-center"><Sparkline data={deployHistory} /></span>
+              )}
             </div>
           </div>
         ) : (

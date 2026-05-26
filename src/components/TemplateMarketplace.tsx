@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { showError } from './Toasts';
 
 export interface MarketplaceEntry {
   id: string;
@@ -26,8 +27,9 @@ export default function TemplateMarketplace({ onUse }: Props) {
       try {
         const data = await window.devdash.scaffold.marketplace();
         setEntries(data);
-      } catch {
+      } catch (err) {
         setEntries([]);
+        showError('Failed to load marketplace', err);
       } finally {
         setLoading(false);
       }

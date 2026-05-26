@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import NotificationCenter, { useNotifications } from './NotificationCenter';
+
 interface Props {
   onMinimize: () => void;
   onMaximize: () => void;
@@ -5,6 +8,9 @@ interface Props {
 }
 
 export default function TitleBar({ onMinimize, onMaximize, onClose }: Props) {
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { unreadCount } = useNotifications();
+
   return (
     <header className="drag flex h-9 items-center justify-between border-b border-[#1a1a1a] bg-[#0A0A0A] px-3 text-xs">
       <div className="flex items-center gap-2">
@@ -15,6 +21,28 @@ export default function TitleBar({ onMinimize, onMaximize, onClose }: Props) {
         <span className="text-[10px] font-mono text-[#333]">v0.25.1</span>
       </div>
       <div className="no-drag flex items-center gap-0.5">
+        {/* Notification bell */}
+        <div className="relative">
+          <button
+            title="Notifications"
+            onClick={() => setNotifOpen((p) => !p)}
+            className="rounded px-2.5 py-1 text-[#555] hover:bg-white/[0.06] hover:text-white transition-all duration-150 active:scale-[0.95] relative"
+          >
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.3">
+              <path d="M8 1.5a4 4 0 014 4v3l1.5 2H2.5L4 8.5v-3a4 4 0 014-4z" strokeLinejoin="round" />
+              <path d="M6.5 12.5a1.5 1.5 0 003 0" strokeLinecap="round" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#0070F3] text-[8px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          {notifOpen && (
+            <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
+          )}
+        </div>
+
         <button
           title="Minimize"
           onClick={onMinimize}

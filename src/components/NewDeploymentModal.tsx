@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ProjectConfig, EnvEntry } from '../types';
+import { showError } from './Toasts';
 
 interface Props {
   project: ProjectConfig;
@@ -128,6 +129,7 @@ export default function NewDeploymentModal({ project, onClose, onSuccess }: Prop
       }
     } catch (err: any) {
       setError(err?.message || 'Deployment failed');
+      showError('Deployment failed', err);
     } finally {
       setBusy(false);
     }

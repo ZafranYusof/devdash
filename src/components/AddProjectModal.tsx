@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ProjectConfig, DeployProvider } from '../types';
+import { showError } from './Toasts';
 
 interface Props {
   initial?: ProjectConfig;
@@ -155,6 +156,7 @@ export default function AddProjectModal({ initial, onClose, onSaved }: Props) {
       onSaved();
     } catch (err) {
       setError((err as Error).message);
+      showError('Failed to save project', err);
     } finally {
       setSaving(false);
     }

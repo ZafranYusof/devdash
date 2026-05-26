@@ -9,12 +9,32 @@ export interface PaletteAction {
   score?: number;
 }
 
+type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
+
 interface Props {
   open: boolean;
   onClose: () => void;
   projects: ProjectConfig[];
   onOpenProject: (id: string, tab?: 'overview' | 'logs' | 'env' | 'time' | 'deps' | 'heatmap' | 'screenshots' | 'release') => void;
-  onSwitchTab: (tab: 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'chat' | 'settings') => void;
+  onSwitchTab: (tab: Tab) => void;
+}
+
+const RECENT_SEARCHES_KEY = 'devdash-recent-searches';
+
+function getRecentSearches(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch { return []; }
+}
+
+function saveRecentSearch(query: string) {
+  if (!query.trim()) return;
+  try {
+    let recent = getRecentSearches();
+    recent = [query, ...recent.filter((r) => r !== query)].slice(0, 5);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent));
+  } catch { /* ignore */ }
 }
 
 function fuzzy(query: string, candidate: string): number {
@@ -39,32 +59,52 @@ function fuzzy(query: string, candidate: string): number {
 export default function CommandPalette({ open, onClose, projects, onOpenProject, onSwitchTab }: Props) {
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState(0);
+  const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
+  const [deploys, setDeploys] = useState<Array<{ projectName: string; status: string; id: string }>>([]);
+  const [snippets, setSnippets] = useState<Array<{ id: string; title: string }>>([]);
+  const [automations, setAutomations] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     if (!open) return;
     setQuery('');
     setIndex(0);
+    setRecentSearches(getRecentSearches());
+    // Load deploys, snippets, automations for enhanced search
+    void (async () => {
+      try {
+        const [dList, sList, aList] = await Promise.all([
+          window.devdash.deploys.list(),
+          window.devdash.snippets.list(),
+          window.devdash.automations.list(),
+        ]);
+        setDeploys(dList.items.map((d) => ({ projectName: d.projectName, status: d.status, id: d.id })));
+        setSnippets(sList.map((s) => ({ id: s.id, title: s.title })));
+        setAutomations(aList.map((a) => ({ id: a.id, name: `${a.kind}:${a.projectId}` })));
+      } catch { /* ignore */ }
+    })();
   }, [open]);
 
   const actions: PaletteAction[] = useMemo(() => {
     const acts: PaletteAction[] = [];
-    // Global
-    acts.push({
-      id: 'go:projects',
-      label: 'Go: Projects',
-      hint: 'Tab',
-      run: () => onSwitchTab('projects'),
-    });
-    acts.push({ id: 'go:deploys', label: 'Go: Deploys', hint: 'Tab', run: () => onSwitchTab('deploys') });
-    acts.push({ id: 'go:uptime', label: 'Go: Uptime', hint: 'Tab', run: () => onSwitchTab('uptime') });
-    acts.push({ id: 'go:time', label: 'Go: Time', hint: 'Tab', run: () => onSwitchTab('time') });
-    acts.push({ id: 'go:deps', label: 'Go: Deps', hint: 'Tab', run: () => onSwitchTab('deps') });
-    acts.push({ id: 'go:automations', label: 'Go: Automations', hint: 'Tab', run: () => onSwitchTab('automations') });
-    acts.push({ id: 'go:dbhealth', label: 'Go: DB Health', hint: 'Tab', run: () => onSwitchTab('dbhealth') });
-    acts.push({ id: 'go:metrics', label: 'Go: Metrics', hint: 'Tab', run: () => onSwitchTab('metrics') });
-    acts.push({ id: 'go:chat', label: 'Go: Chat', hint: 'Tab', run: () => onSwitchTab('chat') });
-    acts.push({ id: 'go:settings', label: 'Go: Settings', hint: 'Tab', run: () => onSwitchTab('settings') });
+    // Global tab navigation
+    const tabs: Array<{ id: Tab; label: string }> = [
+      { id: 'dashboard', label: 'Go: Dashboard' },
+      { id: 'projects', label: 'Go: Projects' },
+      { id: 'deploys', label: 'Go: Deploys' },
+      { id: 'uptime', label: 'Go: Uptime' },
+      { id: 'time', label: 'Go: Time' },
+      { id: 'deps', label: 'Go: Deps' },
+      { id: 'automations', label: 'Go: Automations' },
+      { id: 'dbhealth', label: 'Go: DB Health' },
+      { id: 'metrics', label: 'Go: Metrics' },
+      { id: 'chat', label: 'Go: Chat' },
+      { id: 'settings', label: 'Go: Settings' },
+    ];
+    for (const t of tabs) {
+      acts.push({ id: `go:${t.id}`, label: t.label, hint: 'Tab', run: () => onSwitchTab(t.id) });
+    }
 
+    // Project actions
     for (const p of projects) {
       acts.push({
         id: `open:${p.id}`,
@@ -139,8 +179,39 @@ export default function CommandPalette({ open, onClose, projects, onOpenProject,
         run: () => onOpenProject(p.id, 'heatmap'),
       });
     }
+
+    // Enhanced search: Deploy entries (Improvement #4)
+    for (const d of deploys) {
+      acts.push({
+        id: `deploy:${d.id}`,
+        label: `Deploy: ${d.projectName} (${d.status})`,
+        hint: 'Deploy',
+        run: () => onSwitchTab('deploys'),
+      });
+    }
+
+    // Enhanced search: Snippets
+    for (const s of snippets) {
+      acts.push({
+        id: `snippet:${s.id}`,
+        label: `Snippet: ${s.title}`,
+        hint: 'Snippet',
+        run: () => onSwitchTab('snippets'),
+      });
+    }
+
+    // Enhanced search: Automations
+    for (const a of automations) {
+      acts.push({
+        id: `automation:${a.id}`,
+        label: `Automation: ${a.name}`,
+        hint: 'Automation',
+        run: () => onSwitchTab('automations'),
+      });
+    }
+
     return acts;
-  }, [projects, onOpenProject, onSwitchTab]);
+  }, [projects, onOpenProject, onSwitchTab, deploys, snippets, automations]);
 
   const results = useMemo(() => {
     const scored = actions.map((a) => ({ a, score: fuzzy(query.trim(), a.label) }));
@@ -171,6 +242,7 @@ export default function CommandPalette({ open, onClose, projects, onOpenProject,
         e.preventDefault();
         const pick = results[index];
         if (pick) {
+          if (query.trim()) saveRecentSearch(query.trim());
           onClose();
           await pick.run();
         }
@@ -178,9 +250,11 @@ export default function CommandPalette({ open, onClose, projects, onOpenProject,
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [open, results, index, onClose]);
+  }, [open, results, index, onClose, query]);
 
   if (!open) return null;
+
+  const showRecent = !query.trim() && recentSearches.length > 0;
 
   return (
     <div className="modal-backdrop fixed inset-0 z-40 flex items-start justify-center bg-black/70 pt-24 backdrop-blur-sm">
@@ -192,6 +266,21 @@ export default function CommandPalette({ open, onClose, projects, onOpenProject,
           placeholder="Type project + action, e.g. 'scoreku dev'"
           className="w-full border-b border-[#222] bg-transparent px-4 py-3 text-sm text-white placeholder-[#666] focus:outline-none"
         />
+        {/* Recent searches section */}
+        {showRecent && (
+          <div className="border-b border-[#1a1a1a] px-4 py-2">
+            <div className="text-[10px] text-[#444] uppercase tracking-wider mb-1">Recent</div>
+            {recentSearches.map((r, i) => (
+              <button
+                key={i}
+                onClick={() => setQuery(r)}
+                className="block w-full text-left px-2 py-1 text-xs text-[#888] hover:text-white hover:bg-white/[0.03] rounded transition-colors"
+              >
+                <span className="text-[#555] mr-2">↩</span>{r}
+              </button>
+            ))}
+          </div>
+        )}
         <ul className="max-h-[360px] overflow-y-auto">
           {results.length === 0 && (
             <li className="px-4 py-3 text-xs text-[#666]">No actions match.</li>
@@ -201,6 +290,7 @@ export default function CommandPalette({ open, onClose, projects, onOpenProject,
               key={r.id}
               onMouseEnter={() => setIndex(i)}
               onClick={async () => {
+                if (query.trim()) saveRecentSearch(query.trim());
                 onClose();
                 await r.run();
               }}

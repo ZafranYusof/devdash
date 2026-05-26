@@ -272,6 +272,88 @@ body {
   color: #999;
 }
 
+/* ─── Dark/Light mode transition (Improvement #10) ─── */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.card, .sidebar-item, aside, header, main {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Tab fade transition (Improvement #16) ─── */
+.tab-fade-enter {
+  opacity: 0;
+}
+.tab-fade-active {
+  opacity: 1;
+  transition: opacity 150ms ease-in;
+}
+.tab-fade-exit {
+  opacity: 0;
+  transition: opacity 100ms ease-out;
+}
+
+/* ─── Activity Log panel ─── */
+.activity-log-panel {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.75rem;
+}
+.activity-log-panel .log-entry {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-bottom: 1px solid #1a1a1a;
+}
+.activity-log-panel .log-entry:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+/* ─── Notification center ─── */
+.notification-dropdown {
+  animation: modalScaleIn 0.15s ease-out;
+}
+
+/* ─── Offline indicator ─── */
+.offline-banner {
+  animation: toastSlideIn 0.25s ease-out;
+}
+
+/* ─── Onboarding hints ─── */
+.hint-card {
+  animation: modalScaleIn 0.2s ease-out;
+}
+.hint-arrow {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid #1a1a1a;
+}
+
+/* ─── Sparkline ─── */
+.sparkline-dot {
+  transition: r 150ms ease;
+}
+.sparkline-dot:hover {
+  r: 3;
+}
+
+/* ─── Drag reorder ─── */
+.sidebar-item-dragging {
+  opacity: 0.5;
+}
+.sidebar-drop-indicator {
+  height: 2px;
+  background: #0070F3;
+  border-radius: 1px;
+  margin: 0 0.5rem;
+}
+
+/* ─── Multi-select floating bar ─── */
+.bulk-action-bar {
+  animation: toastSlideIn 0.2s ease-out;
+}
+
 /* ─── Global transition for interactive elements ─── */
 button, a, input, select {
   transition: all 150ms ease-in-out;
