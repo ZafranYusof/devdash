@@ -49,6 +49,10 @@ export default function BackupSettings() {
   }, [config.autoBackupEnabled]);
 
   const exportToFile = async () => {
+    if (!window.devdash?.backup?.export) {
+      setMessage({ type: 'error', text: 'Backup API not available in this version' });
+      return;
+    }
     setExporting(true);
     try {
       const result = await window.devdash.backup.export();
@@ -66,6 +70,10 @@ export default function BackupSettings() {
   };
 
   const importFromFile = async () => {
+    if (!window.devdash?.backup?.import) {
+      setMessage({ type: 'error', text: 'Backup API not available in this version' });
+      return;
+    }
     setImporting(true);
     try {
       const result = await window.devdash.backup.import();
@@ -82,6 +90,10 @@ export default function BackupSettings() {
   };
 
   const exportToGist = async () => {
+    if (!window.devdash?.backup?.export) {
+      setMessage({ type: 'error', text: 'Backup API not available in this version' });
+      return;
+    }
     setGistExporting(true);
     try {
       const settings = await window.devdash.settings.get();

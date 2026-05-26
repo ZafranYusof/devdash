@@ -1,32 +1,32 @@
 import { lazy, Suspense, useEffect, useState, useCallback } from 'react';
 import TitleBar from './components/TitleBar';
 import Sidebar from './components/Sidebar';
-import ProjectsView from './components/ProjectsView';
-import DeploysView from './components/DeploysView';
-import SettingsView from './components/SettingsView';
-import UptimeView from './components/UptimeView';
-import TimeView from './components/TimeView';
-import DepsView from './components/DepsView';
-import PortsView from './components/PortsView';
 import CommandPalette from './components/CommandPalette';
 import OnboardingWizard from './components/OnboardingWizard';
 import ShortcutsOverlay from './components/ShortcutsOverlay';
 import Toasts from './components/Toasts';
-import AutomationsView from './components/AutomationsView';
-import DbHealthView from './components/DbHealthView';
-import MetricsView from './components/MetricsView';
 import OfflineIndicator from './components/OfflineIndicator';
 import ActivityLog from './components/ActivityLog';
-import DashboardView from './components/DashboardView';
 import OnboardingHints from './components/OnboardingHints';
 import Breadcrumbs from './components/Breadcrumbs';
 import KeyboardNavIndicator, { useKeyboardNav } from './components/KeyboardNav';
-import type { ProjectConfig } from './types';
+import type { ProjectConfig, Tab } from './types';
 
 const SplitView = lazy(() => import('./components/SplitView'));
 const MacroRecorder = lazy(() => import('./components/MacroRecorder'));
 
-// Lazy-loaded heavy components (Improvement #1)
+// Lazy-loaded tab components
+const DashboardView = lazy(() => import('./components/DashboardView'));
+const ProjectsView = lazy(() => import('./components/ProjectsView'));
+const DeploysView = lazy(() => import('./components/DeploysView'));
+const SettingsView = lazy(() => import('./components/SettingsView'));
+const UptimeView = lazy(() => import('./components/UptimeView'));
+const TimeView = lazy(() => import('./components/TimeView'));
+const DepsView = lazy(() => import('./components/DepsView'));
+const PortsView = lazy(() => import('./components/PortsView'));
+const AutomationsView = lazy(() => import('./components/AutomationsView'));
+const DbHealthView = lazy(() => import('./components/DbHealthView'));
+const MetricsView = lazy(() => import('./components/MetricsView'));
 const ChatView = lazy(() => import('./components/ChatView'));
 const BuildCodeView = lazy(() => import('./components/BuildCodeView'));
 const TemplateEditor = lazy(() => import('./components/TemplateEditor'));
@@ -59,7 +59,6 @@ function LazyFallback() {
   );
 }
 
-type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings' | 'envmanager' | 'terminal' | 'performance' | 'incidents' | 'analytics' | 'team' | 'pipelines' | 'plugins' | 'mobile' | 'aiassistant';
 type DetailTab = 'overview' | 'logs' | 'env' | 'time' | 'deps' | 'heatmap' | 'screenshots' | 'release';
 
 export default function App() {

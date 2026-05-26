@@ -11,7 +11,7 @@ export default function DashboardView() {
   const [loading, setLoading] = useState(true);
   const [widgetPickerOpen, setWidgetPickerOpen] = useState(false);
   const activityEntries = useActivityLog();
-  const { widgets, enabledWidgets, toggleWidget, moveWidget, resetWidgets } = useDashboardWidgets();
+  const { widgets, enabledWidgets, toggleWidget, moveWidget, reorderWidget, resetWidgets } = useDashboardWidgets();
 
   useEffect(() => {
     void (async () => {
@@ -136,6 +136,7 @@ export default function DashboardView() {
         widgets={widgets}
         onToggle={toggleWidget}
         onMove={moveWidget}
+        onReorder={reorderWidget}
         onReset={resetWidgets}
       />
     </div>

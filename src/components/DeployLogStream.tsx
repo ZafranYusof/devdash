@@ -45,12 +45,32 @@ export default function DeployLogStream({ open, onClose, deployId, projectName }
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    // Intentionally only depends on `open` — we start streaming once when the modal opens.
+    // `lines` is checked but not in deps because we only want to trigger on initial open
+    // (when lines are empty), not on every new line added.
     if (open && lines.length === 0) {
-      startStream();
+      setStreaming(true);
+      setLines([]);
+      let idx = 0;
+      intervalRef.current = setInterval(() => {
+        if (idx >= SIMULATED_LOGS.length) {
+          setStreaming(false);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return;
+        }
+        const text = SIMULATED_LOGS[idx];
+        setLines((prev) => [...prev, {
+          id: `${Date.now()}-${idx}`,
+          text,
+          timestamp: Date.now(),
+        }]);
+        idx++;
+      }, 300 + Math.random() * 400);
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {
@@ -58,26 +78,6 @@ export default function DeployLogStream({ open, onClose, deployId, projectName }
       logRef.current.scrollTop = logRef.current.scrollHeight;
     }
   }, [lines]);
-
-  const startStream = () => {
-    setStreaming(true);
-    setLines([]);
-    let idx = 0;
-    intervalRef.current = setInterval(() => {
-      if (idx >= SIMULATED_LOGS.length) {
-        setStreaming(false);
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        return;
-      }
-      const text = SIMULATED_LOGS[idx];
-      setLines((prev) => [...prev, {
-        id: `${Date.now()}-${idx}`,
-        text,
-        timestamp: Date.now(),
-      }]);
-      idx++;
-    }, 300 + Math.random() * 400);
-  };
 
   const copyLog = () => {
     const text = lines.map((l) => l.text).join('\n');

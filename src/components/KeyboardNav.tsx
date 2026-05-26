@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const STORAGE_KEY = 'devdash-keyboard-nav';
 
@@ -39,6 +39,8 @@ export function useVimBindings(enabled: boolean, callbacks: {
   onBottom?: () => void;
 }) {
   const [pendingG, setPendingG] = useState(false);
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
   useEffect(() => {
     if (!enabled) return;
@@ -53,7 +55,7 @@ export function useVimBindings(enabled: boolean, callbacks: {
         setPendingG(false);
         if (e.key === 'g') {
           e.preventDefault();
-          callbacks.onTop?.();
+          callbacksRef.current.onTop?.();
         }
         return;
       }
@@ -61,31 +63,31 @@ export function useVimBindings(enabled: boolean, callbacks: {
       switch (e.key) {
         case 'j':
           e.preventDefault();
-          callbacks.onDown?.();
+          callbacksRef.current.onDown?.();
           break;
         case 'k':
           e.preventDefault();
-          callbacks.onUp?.();
+          callbacksRef.current.onUp?.();
           break;
         case 'h':
           e.preventDefault();
-          callbacks.onLeft?.();
+          callbacksRef.current.onLeft?.();
           break;
         case 'l':
           e.preventDefault();
-          callbacks.onRight?.();
+          callbacksRef.current.onRight?.();
           break;
         case 'Enter':
           e.preventDefault();
-          callbacks.onEnter?.();
+          callbacksRef.current.onEnter?.();
           break;
         case '/':
           e.preventDefault();
-          callbacks.onSearch?.();
+          callbacksRef.current.onSearch?.();
           break;
         case 'q':
           e.preventDefault();
-          callbacks.onClose?.();
+          callbacksRef.current.onClose?.();
           break;
         case 'g':
           e.preventDefault();
@@ -94,12 +96,12 @@ export function useVimBindings(enabled: boolean, callbacks: {
           break;
         case 'G':
           e.preventDefault();
-          callbacks.onBottom?.();
+          callbacksRef.current.onBottom?.();
           break;
       }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [enabled, callbacks, pendingG]);
+  }, [enabled, pendingG]);
 }

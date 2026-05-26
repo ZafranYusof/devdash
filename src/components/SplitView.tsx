@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-
-type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings' | 'envmanager' | 'terminal' | 'performance' | 'incidents' | 'analytics' | 'team' | 'pipelines' | 'plugins' | 'mobile' | 'aiassistant';
+import type { Tab } from '../types';
 
 interface Props {
   leftTab: Tab;
@@ -18,12 +17,27 @@ const TAB_OPTIONS: Array<{ id: Tab; label: string }> = [
   { id: 'uptime', label: 'Uptime' },
   { id: 'time', label: 'Time' },
   { id: 'deps', label: 'Deps' },
+  { id: 'automations', label: 'Automations' },
+  { id: 'dbhealth', label: 'DB Health' },
+  { id: 'metrics', label: 'Metrics' },
+  { id: 'ports', label: 'Ports' },
+  { id: 'build', label: 'Build Code' },
+  { id: 'zerolive', label: 'Zero to Live' },
+  { id: 'aigen', label: 'AI Code Gen' },
+  { id: 'templates', label: 'Templates' },
+  { id: 'snippets', label: 'Snippets' },
+  { id: 'chat', label: 'Chat' },
+  { id: 'settings', label: 'Settings' },
+  { id: 'envmanager', label: 'Env Manager' },
+  { id: 'terminal', label: 'Terminal' },
+  { id: 'performance', label: 'Performance' },
   { id: 'incidents', label: 'Incidents' },
   { id: 'analytics', label: 'Analytics' },
+  { id: 'team', label: 'Team' },
   { id: 'pipelines', label: 'Pipelines' },
-  { id: 'metrics', label: 'Metrics' },
-  { id: 'terminal', label: 'Terminal' },
-  { id: 'settings', label: 'Settings' },
+  { id: 'plugins', label: 'Plugins' },
+  { id: 'mobile', label: 'Mobile' },
+  { id: 'aiassistant', label: 'AI Assistant' },
 ];
 
 export default function SplitView({ leftTab, rightTab, onLeftTabChange, onRightTabChange, onClose, children }: Props) {

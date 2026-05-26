@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePinnedTabs, SidebarContextMenu } from './PinnedTabs';
-
-type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings' | 'envmanager' | 'terminal' | 'performance' | 'incidents' | 'analytics' | 'team' | 'pipelines' | 'plugins' | 'mobile' | 'aiassistant';
+import type { Tab } from '../types';
 
 interface Props {
   tab: Tab;
@@ -196,11 +195,23 @@ export default function Sidebar({ tab, onChange }: Props) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const handleCollapse = () => {
+  const handleCollapse = useCallback(() => {
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem(COLLAPSED_KEY, String(next));
-  };
+  }, [collapsed]);
+
+  // Ctrl+B to toggle sidebar collapse
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        handleCollapse();
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [handleCollapse]);
 
   const handleContextMenu = (e: React.MouseEvent, itemId: Tab) => {
     e.preventDefault();

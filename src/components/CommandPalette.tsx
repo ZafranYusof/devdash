@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ProjectConfig } from '../types';
+import type { ProjectConfig, Tab } from '../types';
 
 export interface PaletteAction {
   id: string;
@@ -8,8 +8,6 @@ export interface PaletteAction {
   run: () => void | Promise<unknown>;
   score?: number;
 }
-
-type Tab = 'dashboard' | 'projects' | 'deploys' | 'uptime' | 'time' | 'deps' | 'automations' | 'dbhealth' | 'metrics' | 'ports' | 'build' | 'zerolive' | 'aigen' | 'templates' | 'snippets' | 'chat' | 'settings';
 
 interface Props {
   open: boolean;

@@ -13,6 +13,9 @@ interface Shortcut {
 
 const SHORTCUTS: Shortcut[] = [
   { keys: ['Ctrl', 'K'], description: 'Open command palette', category: 'Navigation' },
+  { keys: ['Ctrl', 'B'], description: 'Toggle sidebar collapse', category: 'Navigation' },
+  { keys: ['Ctrl', '\\'], description: 'Toggle split view', category: 'Navigation' },
+  { keys: ['Ctrl', '`'], description: 'Toggle activity log', category: 'Navigation' },
   { keys: ['?'], description: 'Show keyboard shortcuts', category: 'Navigation' },
   { keys: ['Esc'], description: 'Close modal or overlay', category: 'Navigation' },
 

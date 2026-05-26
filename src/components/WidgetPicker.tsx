@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface DashboardWidget {
   id: string;
@@ -54,13 +54,22 @@ export function useDashboardWidgets() {
     });
   };
 
+  const reorderWidget = (fromIndex: number, toIndex: number) => {
+    setWidgets((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next.map((w, i) => ({ ...w, order: i }));
+    });
+  };
+
   const resetWidgets = () => {
     setWidgets(DEFAULT_WIDGETS);
   };
 
   const enabledWidgets = widgets.filter((w) => w.enabled).sort((a, b) => a.order - b.order);
 
-  return { widgets, enabledWidgets, toggleWidget, moveWidget, resetWidgets };
+  return { widgets, enabledWidgets, toggleWidget, moveWidget, reorderWidget, resetWidgets };
 }
 
 interface WidgetPickerProps {
@@ -69,10 +78,64 @@ interface WidgetPickerProps {
   widgets: DashboardWidget[];
   onToggle: (id: string) => void;
   onMove: (id: string, dir: 'up' | 'down') => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
   onReset: () => void;
 }
 
-export default function WidgetPicker({ open, onClose, widgets, onToggle, onMove, onReset }: WidgetPickerProps) {
+export default function WidgetPicker({ open, onClose, widgets, onToggle, onMove, onReorder, onReset }: WidgetPickerProps) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const startY = useRef(0);
+  const draggedIdx = useRef<number | null>(null);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    dragging.current = true;
+    startY.current = e.clientY;
+    draggedIdx.current = index;
+    setDragIndex(index);
+    setDropIndex(null);
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!dragging.current || !containerRef.current) return;
+      const items = containerRef.current.querySelectorAll('[data-widget-index]');
+      let closest: number | null = null;
+      let closestDist = Infinity;
+      items.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const dist = Math.abs(ev.clientY - midY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          const idx = parseInt(el.getAttribute('data-widget-index') || '0');
+          closest = ev.clientY > midY ? idx + 1 : idx;
+        }
+      });
+      setDropIndex(closest);
+    };
+
+    const handleMouseUp = () => {
+      if (dragging.current && draggedIdx.current !== null && dropIndex !== null) {
+        let targetIdx = dropIndex;
+        if (targetIdx > draggedIdx.current) targetIdx--;
+        if (targetIdx !== draggedIdx.current) {
+          onReorder(draggedIdx.current, targetIdx);
+        }
+      }
+      dragging.current = false;
+      draggedIdx.current = null;
+      setDragIndex(null);
+      setDropIndex(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [dropIndex, onReorder]);
+
   if (!open) return null;
 
   return (
@@ -86,24 +149,46 @@ export default function WidgetPicker({ open, onClose, widgets, onToggle, onMove,
             </svg>
           </button>
         </div>
-        <div className="p-4 flex flex-col gap-2 max-h-[360px] overflow-y-auto">
-          {widgets.map((widget) => (
-            <div key={widget.id} className="flex items-center justify-between p-2 rounded border border-[#1a1a1a] hover:border-[#333] transition-colors">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={widget.enabled}
-                  onChange={() => onToggle(widget.id)}
-                  className="rounded border-[#333]"
-                />
-                <span className="text-xs text-white">{widget.label}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => onMove(widget.id, 'up')} className="btn-ghost text-[10px]">↑</button>
-                <button onClick={() => onMove(widget.id, 'down')} className="btn-ghost text-[10px]">↓</button>
+        <div ref={containerRef} className="p-4 flex flex-col gap-2 max-h-[360px] overflow-y-auto">
+          {widgets.map((widget, idx) => (
+            <div key={widget.id} data-widget-index={idx} className="relative">
+              {/* Drop indicator line */}
+              {dropIndex === idx && dragIndex !== null && dragIndex !== idx && (
+                <div className="absolute -top-1 left-0 right-0 h-0.5 bg-[#0070F3] rounded" />
+              )}
+              <div
+                className={`flex items-center justify-between p-2 rounded border transition-colors ${
+                  dragIndex === idx ? 'opacity-50 border-[#0070F3]' : 'border-[#1a1a1a] hover:border-[#333]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {/* Drag handle */}
+                  <span
+                    onMouseDown={(e) => handleMouseDown(e, idx)}
+                    className="cursor-grab active:cursor-grabbing text-[#555] hover:text-white px-0.5 select-none"
+                    title="Drag to reorder"
+                  >
+                    ⠿
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={widget.enabled}
+                    onChange={() => onToggle(widget.id)}
+                    className="rounded border-[#333]"
+                  />
+                  <span className="text-xs text-white">{widget.label}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => onMove(widget.id, 'up')} className="btn-ghost text-[10px]">↑</button>
+                  <button onClick={() => onMove(widget.id, 'down')} className="btn-ghost text-[10px]">↓</button>
+                </div>
               </div>
             </div>
           ))}
+          {/* Drop indicator at the end */}
+          {dropIndex === widgets.length && dragIndex !== null && (
+            <div className="h-0.5 bg-[#0070F3] rounded" />
+          )}
         </div>
         <div className="border-t border-[#222] px-4 py-2 flex justify-end">
           <button onClick={onReset} className="btn-soft">Reset Layout</button>
